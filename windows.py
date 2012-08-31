@@ -5,7 +5,7 @@ import online
 usertext = ''
 usexi    = False
 class Editor(object):
-    def __init__(self,master,receiver,account,xi,userstat):
+    def __init__(self,master,receiver,account,xi):
         global usertext,usexi
         usertext = ''
         usexi    = False
@@ -15,7 +15,7 @@ class Editor(object):
         self.label0.grid(row=0,column=0,padx=10,pady=2,sticky=N+E+W+S)
         
         self.label1 = Label(master,anchor=E)
-        self.label1['text'] = '选择账号:'
+        self.label1['text'] = '发送者（您）:'
         self.label1.grid(row=1,column=0,padx=10,pady=2,sticky=N+E+W+S)
         
         self.receiver = Label(master,anchor=W)
@@ -23,8 +23,9 @@ class Editor(object):
         self.receiver.grid(row=0,column=1,columnspan=1,sticky=N+E+W+S)
 
         self.recstatus = Label(master,anchor=W)
-        def refreshstat(m=master,u=userstat):
-            olstate = online.get_status(u[0],u[1])
+        def refreshstat(m=master,u=receiver):
+#            olstate = online.get_status(u)
+            olstate = 100
 
             if   olstate == -2:
                 self.recstatus.config(text='当前离线',fg='#950')
@@ -82,11 +83,11 @@ class Editor(object):
         master.update_idletasks()
         
 
-def inputbox(receiver,account,xi,onlinestate):
+def inputbox(receiver,account,xi):
     global usertext,usexi
     root = Tk()
     root.title("给 %s 发送信息" % receiver)
-    app = Editor(root,receiver,account,xi,onlinestate)
+    app = Editor(root,receiver,account,xi)
     
     w = root.winfo_width()
     h = root.winfo_height()
