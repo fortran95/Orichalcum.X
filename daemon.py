@@ -3,7 +3,7 @@
 # This is used to check and pull messages from given server.
 
 import ConfigParser, sys, os, StringIO, json, shelve, hashlib, hmac, time, tkMessageBox
-import notifier,processor
+import notifier,processor,entity
 from Tkinter import *
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
@@ -18,19 +18,20 @@ def find_jsonstr(retrived):
     
 if __name__ == '__main__':
     
-    accounts = {}
+    accounts = []
     
     accountfile = ConfigParser.ConfigParser()
     accountfile.read(os.path.join(BASEPATH,'configs','accounts.cfg'))
     
     for secname in accountfile.sections():
-        accounts[secname] = {'user':accountfile.get(secname,'user'),
-                             'secret':accountfile.get(secname,'secret')}
+        accounts.append((accountfile.get(secname,'user'),
+                         accountfile.get(secname,'secret'))
         
     last_message_notify = 0
 
     clients = []
-    for nickname in 
+    for jid,password in accounts:
+        clients.append(xmpp.XMPP(jid,password))
     
     def job():
         global accounts,last_message_notify,BASEPATH
