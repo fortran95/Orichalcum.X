@@ -96,7 +96,9 @@ if __name__ == '__main__':
             if each[0].isAlive():
                 newmessages += each[0].getMessage()
         if newmessages:
-            print newmessages
+            for msg in newmessages:
+                processor.handle(msg['message'],utils.stripJID(msg['jid']))
+            newmessages = []
 
         # Job #2: Check if there is anything to send.
         missions = utils.stack_get('outgoing')

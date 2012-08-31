@@ -18,10 +18,7 @@ op.add_option("-f","--flush",action="store_true",dest="omit",default=False,help=
 
 (options,args) = op.parse_args()
 
-usercfg = ConfigParser.ConfigParser()
-usercfg.read(os.path.join(BASEPATH,'configs','personal.cfg'))
-
-myname  = usercfg.get('general','username').strip()
+myname  = utils.myname
 recname = options.receiver
 if not entity.getJIDsByNickname(recname):
     print "Unrecognized receiver nickname."

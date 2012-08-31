@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import notifier,shelve,base64,sys,os,time,hashlib,json
-import plugins,xisupport,msgpack
+import plugins,xisupport,msgpack,utils,entity
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
@@ -9,27 +9,28 @@ def parse(message,moretags,sender):
     tag=''
     try:
         moretags = json.loads(moretags.decode('hex'))
-        moretags['sender'] = sender
+        timestamp = moretags['timestamp']
         tag = moretags['tag']
     except:
         tag = 'im'
-    return {'tag':tag,'message':message,'more':moretags}
-def handle(message,accountkey,receiver):
+    return {'tag':tag,'message':message,'more':moretags,'timestamp':timestamp}
+def handle(message,sender):
     try:
-        coremessage = msgpack.depack(message['message'])
+        coremessage = msgpack.depack(message)
         is_xi_message = coremessage['xi']
+        entity_sender = entity.getNicknameByJID(sender)
 
         # put message['message'] to Xi
-        tag = json.dumps({'tag':coremessage['tag'],'timestamp':message['timestamp'],'account':accountkey}).encode('hex')
+        tag = json.dumps({'tag':coremessage['tag'],'timestamp':coremessage['timestamp']}).encode('hex')
 
-        if xisupport.XI_ENABLED and is_xi_message:    
-            xisupport.xi_queue(message['sender'],receiver,tag,coremessage['message'],False)
+        if xisupport.XI_ENABLED and is_xi_message:
+            xisupport.xi_queue(entity_sender,utils.myname,tag,coremessage['message'],False)
             # Retrive Xi handled messages and parse that.
             handled = xisupport.xi_handled(False)
             for i in handled:
                 handle_kernel(i[0],i[1],i[2],i[3],True) # SENDER RECEIVER TAG BODY
         else:
-            handle_kernel(message['sender'],receiver,tag,coremessage['message'],False)
+            handle_kernel(entity_sender,utils.myname,tag,coremessage['message'],False)
     except Exception,e:
         print "Error handling message: %s" % e
 
@@ -58,8 +59,8 @@ def handle_kernel(sender,receiver,tag,message,isxi):
                 break
         
         db = shelve.open(MSGDB_PATH0 + 'db' , writeback=True)
-        newpiece = {'message':message,'timestamp':tag['timestamp'],'account':tag['account'],'xi':isxi}
-        newhash = base64.encodestring(hashlib.md5(message + tag['timestamp']).digest()).strip()
+        newpiece = {'message':message,'timestamp':guidance['timestamp'],'xi':isxi}
+        newhash = base64.encodestring(hashlib.md5(message + guidance['timestamp']).digest()).strip()
         newkey = base64.encodestring(sender)
         if db.has_key(newkey) == False:
             db[newkey] = {newhash:newpiece}

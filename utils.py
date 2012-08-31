@@ -1,6 +1,12 @@
 import os,sys,shelve
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
+usercfg = ConfigParser.ConfigParser()
+usercfg.read(os.path.join(BASEPATH,'configs','personal.cfg'))
+
+myname  = usercfg.get('general','username').strip()
+
+
 def stripJID(jid):
     if '/' in jid:
         jid = jid.split('/',1)[0]
