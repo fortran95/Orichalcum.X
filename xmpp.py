@@ -73,6 +73,7 @@ class XMPP(threading.Thread):
 #        print "On Disconnected"
         if self.connect_status == 1:
             self.terminate()
+            self.connect_status = -1
         self.connect_status = 0
 
     def _onMessage(self,message):

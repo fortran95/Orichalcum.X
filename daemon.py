@@ -27,70 +27,7 @@ if __name__ == '__main__':
         accounts.append((accountfile.get(secname,'user'),
                          accountfile.get(secname,'secret'))
         
-    last_message_notify = 0
-
-    clients = []
-    for jid,password in accounts:
-        clients.append(xmpp.XMPP(jid,password))
-    
-    def job():
-        global accounts,last_message_notify,BASEPATH
-
-        # Job #1 List new messages
-        sh = shelve.open(os.path.join(BASEPATH,"configs","orichalcum.db"),writeback=True)
-        
-        now = time.time()
-        
-        if sh.has_key('accounts') == False:
-            sh['accounts'] = {}
-        
-        for key in accounts:
-            if now - accounts[key]['lastls'] > 30:
-                accounts[key]['lastls'] = now
-                # VISIT THE SITE
-                codes = check_messages_list(accounts[key]['host'],accounts[key]['user'],accounts[key]['secret'],accounts[key]['bits'])
-                if codes != False:
-                    print "Listing: %d new message(s) found." % len(codes)
-                    for code in codes:
-                        # Save required code.
-                        if sh['accounts'].has_key(key) == False:
-                            sh['accounts'][key] = {'codes':[],'messages':[]}
-                        sh['accounts'][key]['codes'].append(code)
-                else:
-                    print codes
-        # Job #2: Pull messages
-        for key in accounts:
-            if now - accounts[key]['lastpull'] > 30:
-                accounts[key]['lastpull'] = now
-                
-                pulled = []
-                
-                if sh['accounts'].has_key(key) == False:
-                    sh['accounts'][key] = {'codes':[]}
-                
-                for pullcode in sh['accounts'][key]['codes']:
-                    print "Pulling message ID = %s ..." % pullcode
-                    pm = pull_message(accounts[key]['host'],accounts[key]['user'],accounts[key]['secret'],pullcode,accounts[key]['bits'])
-                    if pm != False:
-                        print "(Message retrived successfully.)"
-                        #  postoffice support
-                        processor.handle(pm,key,accounts[key]['user']) # key is account name(not username).
-                    else:
-                        print "(Error in retriving message.)"
-                    pulled.append(pullcode)
-                
-                for todel in pulled:
-                    if todel in sh['accounts'][key]['codes']:
-                        sh['accounts'][key]['codes'].remove(todel)
-                
-        notify_timed = now - last_message_notify
-        if notify_timed > 60:
-            processor.notify()
-            last_message_notify = now                
-            
-        sh.close()
-
-# Start daemon.
+    # Start daemon, check lockfile first.
     LOCKFILE = os.path.join(BASEPATH,'daemonized.lock')
     if os.path.isfile(LOCKFILE):
         # See if previous daemon is running.
@@ -123,20 +60,39 @@ if __name__ == '__main__':
             print "Error starting daemon:"
             print e
             exit()
+
+    # Set lock file
     f = open(LOCKFILE,'w+')
     f.close()
+
+    clients = []
+    for jid,password in accounts:
+        clients.append(xmpp.XMPP(jid,password))
+
+    # begin looping
+    last_message_notify = 0
     while True:
         if not os.path.isfile(LOCKFILE):
             print "Exit the program."
+            for each in clients:
+                each.terminate()
+                each.join()
             exit()
         else:
             f = open(LOCKFILE,'w')
             f.truncate(20)
             f.write(str(int(time.time())))
             f.close()
-        
-        print ' ' * 10 + "Time to check my job."
-        
-        job()
-        print ' ' * 10 + "My job finished."
-        time.sleep(10)
+        # Job now.
+        now = time.time()
+        # Job #1: Check if clients got messages for us.
+
+        # Job #2: Check if there is anything to send.
+
+        # Job #3: Raise Alarm if there is any new messages.
+        notify_timed = now - last_message_notify
+        if notify_timed > 60:
+            processor.notify()
+            last_message_notify = now
+        # Now All Job Done
+        time.sleep(0.5)
