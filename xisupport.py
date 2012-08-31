@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-import os,sys,hashlib
+import os,sys,hashlib,random
 
 VIA = 'orichalcumX'
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
@@ -25,9 +25,9 @@ def xi_queue(sender,receiver,tag,message,outgoing=True):
     else:
         midpath = 'incoming'
     
-    content = 'SENDER %s\nRECEIVER %s\nVIA %s\nTAG %s\n\n%s' % (sender,receiver,VIA,tag,message)
+    content = u'SENDER %s\nRECEIVER %s\nVIA %s\nTAG %s\n\n%s' % (sender,receiver,VIA,tag,message)
 
-    filename = os.path.join(BOXPATH,midpath,'queue',hashlib.md5(content).hexdigest())
+    filename = os.path.join(BOXPATH,midpath,'queue',hashlib.md5(str(random.random()) + tag).hexdigest())
 
     open(filename,'w+').write(content)
 
