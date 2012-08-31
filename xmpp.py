@@ -14,8 +14,8 @@ class XMPP(threading.Thread):
     
     connect_status = 0   # 0-disconnected 1-connecting 2-confirm_connected,
                          # -1:error
-    schedule_rec   = {'send_presence':0}
-    schedule_set   = {'send_presence':30}
+    schedule_rec   = {'send_presence':0  ,'get_roster':0}
+    schedule_set   = {'send_presence':30 ,'get_roster':30}
 
     def __init__(self,jid,password):
         threading.Thread.__init__(self)
@@ -45,6 +45,12 @@ class XMPP(threading.Thread):
                         self.schedule_set['send_presence']):
                     self.xmpp.sendPresence()
                     self.schedule_rec['send_presence'] = nowtime
+
+                # Scheduled to get roster
+                if (nowtime - self.schedule_rec['get_roster'] > 
+                        self.schedule_set['get_roster']):
+                    self.xmpp.getRoster(block=False)
+                    self.schedule_rec['get_roster'] = nowtime
 
                 # empty send queue
                 self.outgoing_lock.acquire()
@@ -106,7 +112,7 @@ if __name__ == '__main__':
     x.start()
     
     while True:       
-        cmd = raw_input('COMMAND: t, new, read')
+        cmd = raw_input('COMMAND: t, new, read, roster')
         if cmd == 't':
             x.terminate()
             x.join()
@@ -116,5 +122,10 @@ if __name__ == '__main__':
             receiver = 'neoatlantis@wtfismyip.com/'
             message  = raw_input('message?')
             x.setMessage(receiver,message)
+        if cmd == 'roster':
+            try:
+                print x.xmpp.client_roster
+            except:
+                pass
         if cmd == 'read':
             print x.getMessage()
