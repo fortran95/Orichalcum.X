@@ -60,7 +60,7 @@ def handle_kernel(sender,receiver,tag,message,isxi):
         
         db = shelve.open(MSGDB_PATH0 + 'db' , writeback=True)
         newpiece = {'message':message,'timestamp':guidance['timestamp'],'xi':isxi}
-        newhash = base64.encodestring(hashlib.md5(message + guidance['timestamp']).digest()).strip()
+        newhash = base64.encodestring(hashlib.md5(message + str(guidance['timestamp'])).digest()).strip()
         newkey = base64.encodestring(sender)
         if db.has_key(newkey) == False:
             db[newkey] = {newhash:newpiece}

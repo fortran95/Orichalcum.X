@@ -97,7 +97,7 @@ if __name__ == '__main__':
                 newmessages += each[0].getMessage()
         if newmessages:
             for msg in newmessages:
-                processor.handle(msg['message'],utils.stripJID(msg['jid']))
+                processor.handle(msg['message'],utils.stripJID(str(msg['jid'])))
             newmessages = []
 
         # Job #2: Check if there is anything to send.

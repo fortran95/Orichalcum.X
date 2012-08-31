@@ -1,4 +1,5 @@
-import os,sys,shelve
+import os,sys,shelve,ConfigParser
+
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
 usercfg = ConfigParser.ConfigParser()
