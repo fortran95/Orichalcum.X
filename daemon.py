@@ -3,7 +3,7 @@
 # This is used to check and pull messages from given server.
 
 import ConfigParser, sys, os, StringIO, json, shelve, hashlib, hmac, time, tkMessageBox
-import notifier,processor,entity
+import notifier,processor,entity,xmpp
 from Tkinter import *
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     
     for secname in accountfile.sections():
         accounts.append((accountfile.get(secname,'user'),
-                         accountfile.get(secname,'secret'))
+                         accountfile.get(secname,'secret')))
         
     # Start daemon, check lockfile first.
     LOCKFILE = os.path.join(BASEPATH,'daemonized.lock')
@@ -65,9 +65,13 @@ if __name__ == '__main__':
     f = open(LOCKFILE,'w+')
     f.close()
 
+    print "Starting up XMPP clients..."
     clients = []
     for jid,password in accounts:
         clients.append(xmpp.XMPP(jid,password))
+    for each in clients:
+        each.start()
+    print "All XMPP Clients fired."
 
     # begin looping
     last_message_notify = 0
@@ -86,7 +90,12 @@ if __name__ == '__main__':
         # Job now.
         now = time.time()
         # Job #1: Check if clients got messages for us.
-
+        newmessages = []
+        for client in clients:
+            if client.isAlive():
+                newmessages += client.getMessage()
+        if newmessages:
+            print newmessages
         # Job #2: Check if there is anything to send.
 
         # Job #3: Raise Alarm if there is any new messages.
