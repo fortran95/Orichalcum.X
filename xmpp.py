@@ -1,6 +1,7 @@
 import threading
 import time
 import copy
+from Tkinter import *
 
 import sleekxmpp
 
