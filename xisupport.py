@@ -2,7 +2,7 @@
 
 import os,sys,hashlib
 
-VIA = 'orichalcum'
+VIA = 'orichalcumX'
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 BOXPATH  = os.path.join(BASEPATH,'postoffice','boxes')
 

@@ -119,6 +119,8 @@ if __name__ == '__main__':
                 if possible_jids == False:
                     continue
                 for jid in possible_jids:
+                    if utils.stripJID(jid) == utils.stripJID(each[0].jid):
+                        continue
                     if jid in each[0].xmpp.client_roster.keys():
                         each[0].setMessage(jid,mission['message'])     
 

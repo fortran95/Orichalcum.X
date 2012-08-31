@@ -22,6 +22,7 @@ class XMPP(threading.Thread):
         self._sig_terminate = threading.Event()
 
         self.xmpp = sleekxmpp.ClientXMPP(jid,password)
+        self.jid = jid
 
         self.xmpp.add_event_handler("session_start",self._onConnected)
         self.xmpp.add_event_handler("message",self._onMessage)
