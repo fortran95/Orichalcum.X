@@ -1,12 +1,10 @@
 
 import shelve, ConfigParser, os, sys, json
 from optparse import OptionParser,OptionGroup
-import windows,xisupport,msgpack,entity
+import windows,xisupport,msgpack,entity,utils
 
-def queue_message(receiverJID,message):
-    print "****"
-    print "Send to: %s" % receiverJID
-    print "message: %s" % message
+def queue_message(receiver,message):
+    utils.stack_set('outgoing',{'receiver':receiver,'message':message})
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 

@@ -3,7 +3,7 @@
 # This is used to check and pull messages from given server.
 
 import ConfigParser, sys, os, StringIO, json, shelve, hashlib, hmac, time, tkMessageBox
-import notifier,processor,entity,xmpp
+import notifier,processor,entity,xmpp,utils
 from Tkinter import *
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
@@ -68,9 +68,9 @@ if __name__ == '__main__':
     print "Starting up XMPP clients..."
     clients = []
     for jid,password in accounts:
-        clients.append(xmpp.XMPP(jid,password))
+        clients.append([xmpp.XMPP(jid,password),[]])
     for each in clients:
-        each.start()
+        each[0].start()
     print "All XMPP Clients fired."
 
     # begin looping
@@ -79,8 +79,8 @@ if __name__ == '__main__':
         if not os.path.isfile(LOCKFILE):
             print "Exit the program."
             for each in clients:
-                each.terminate()
-                each.join()
+                each[0].terminate()
+                each[0].join()
             exit()
         else:
             f = open(LOCKFILE,'w')
@@ -89,14 +89,38 @@ if __name__ == '__main__':
             f.close()
         # Job now.
         now = time.time()
+
         # Job #1: Check if clients got messages for us.
         newmessages = []
-        for client in clients:
-            if client.isAlive():
-                newmessages += client.getMessage()
+        for each in clients:
+            if each[0].isAlive():
+                newmessages += each[0].getMessage()
         if newmessages:
             print newmessages
+
         # Job #2: Check if there is anything to send.
+        missions = utils.stack_get('outgoing')
+        if missions:
+            for mission in missions:
+                for each in clients:
+                    if not each[0].isAlive():
+                        continue
+                    each[1].append(mission)
+        for each in clients:
+            if not each[1]:
+                continue
+            if not each[0].isAlive():
+                continue
+            if not each[0].connect_status == 2:
+                continue
+            if each[0].xmpp.client_roster:
+                mission = each[1].pop(0)
+                possible_jids = entity.getJIDsByNickname(mission['receiver'])
+                if possible_jids == False:
+                    continue
+                for jid in possible_jids:
+                    if jid in each[0].xmpp.client_roster.keys():
+                        each[0].setMessage(jid,mission['message'])     
 
         # Job #3: Raise Alarm if there is any new messages.
         notify_timed = now - last_message_notify
