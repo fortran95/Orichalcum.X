@@ -3,9 +3,7 @@
 from Tkinter import *
 import shelve,os,sys,copy,base64,time,tkMessageBox,subprocess,tkFileDialog
 
-BASEPATH = os.path.dirname(sys.argv[0])
-if BASEPATH != '':
-    BASEPATH += '/'
+BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
 class message_list(object):
     message_cache = {}
@@ -36,16 +34,17 @@ class message_list(object):
     def quit(self):
         global BASEPATH
         # Will destroy all messages. First, lock up the database.
+        msgdb_path0 = os.path.join(BASEPATH,'configs','msgdb')
         while True:
-            if os.path.isfile(BASEPATH + 'configs/msgdb.lock'):
+            if os.path.isfile(msgdb_path0 + '.lock'):
                 print 'Orichalcum processor: Message database locked, waiting.'
                 time.sleep(0.5)
             else:
-                dblock = open(BASEPATH + 'configs/msgdb.lock','w+')
+                dblock = open(msgdb_path0 + '.lock','w+')
                 dblock.close()
                 break
         # Clear keys.
-        db = shelve.open(BASEPATH + 'configs/msgdb.db',writeback=True)
+        db = shelve.open(msgdb_path0 + '.db',writeback=True)
         dellist = []
         for key0 in db:
             for key1 in db[key0]:
@@ -55,8 +54,8 @@ class message_list(object):
             del db[t[0]][t[1]]
         db.close()
         # Remove lock
-        if os.path.isfile(BASEPATH + 'configs/msgdb.lock'):
-            os.remove(BASEPATH + 'configs/msgdb.lock')
+        if os.path.isfile(msgdb_path0 + '.lock'):
+            os.remove(msgdb_path0 + '.lock')
         # Kill the dialog
         self.root.destroy()
     def refresh_message(self,*args):
@@ -65,7 +64,7 @@ class message_list(object):
         
         selected = self.userlist_var.get()
         
-        db = shelve.open(BASEPATH + 'configs/msgdb.db')
+        db = shelve.open(os.path.join(BASEPATH,'configs','msgdb.db'))
         self.userlist['menu'].delete(0,END)
         self.message_cache = {}
         for key in db:
@@ -103,10 +102,9 @@ class message_list(object):
         self.protect_pointer()
         if self.message_cache.has_key(self.selected):
             curmsg = self.message_cache[self.selected][self.pointer][1]
-            accname = curmsg['account']
             receiver= self.selected
             #print "command: python send.py -r %s -a %s" % (receiver,accname)
-            subprocess.Popen(['python',BASEPATH + 'send.py','-r',receiver,'-a',accname])
+            subprocess.Popen(['python',os.path.join(BASEPATH,'send.py'),'-r',receiver])
     def save_message(self):
         self.selected = self.userlist_var.get()
         self.protect_pointer()
