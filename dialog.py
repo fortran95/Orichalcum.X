@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from Tkinter import *
-import shelve,os,sys,copy,base64,time,tkMessageBox,subprocess,tkFileDialog,random,hashlib
+import shelve,os,sys,copy,base64,time,tkMessageBox,threading,tkFileDialog,random,hashlib
 
 from widgets.richtextbox import RichTextBox,rich2plain
 from widgets.dialogbox import DialogBox
@@ -88,6 +88,12 @@ class message_list(object):
         self.root.destroy()
     def _do_send(self,message,crypt=True):
         global BASEPATH
+
+        plainmessage = rich2plain(message).strip()
+        if plainmessage == '':
+            self.replybox.flash(2)
+            return
+
         cache = os.path.join(BASEPATH,'cache',hashlib.md5(message + str(random.random())).hexdigest())
         open(cache,'w').write(message)
         try:
@@ -101,6 +107,9 @@ class message_list(object):
 
         # Add to history
         self.append_message(True,message=message,timestamp=time.time())
+
+        # clear input box
+        self.replybox.clear()
 
     def send_plain(self):
         self._do_send(self.replybox.text(),False)

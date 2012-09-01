@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import zlib
+import threading
+import time
 from Tkinter import *
 
 import bson
@@ -48,6 +50,17 @@ class RichTextBox(Frame):
 
     def clear(self):
         self.textbox.delete(1.0,END)
+
+    def flash(self,times,background='#F22'):
+        def _flashfunc(t=times,bg=background):
+            orig = self.textbox['background']
+            interval = 0.10
+            for i in range(0,t):
+                self.textbox.config(background=bg)
+                time.sleep(interval)
+                self.textbox.config(background=orig)
+                time.sleep(interval)
+        threading.Timer(0,_flashfunc).start()
 
     def _inRange(self,tagname,probe):
         ranges = self.textbox.tag_ranges(tagname)
