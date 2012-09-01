@@ -30,11 +30,11 @@ if not options.omit:
     if options.input == False:
         try:
             userinput = windows.inputbox(recname,myname,(xisupport.XI_ENABLED and options.usexi))
-            message = unicode(userinput['text']).encode('utf-8')
-            user_usexi = userinput['xi']
-            if message == False:
+            if userinput['text'] == False:
                 print "User cancelled."
                 exit()
+            message = unicode(userinput['text']).encode('utf-8')
+            user_usexi = userinput['xi']
         except Exception,e:
             print "Error getting input: %s" % e
             exit()
