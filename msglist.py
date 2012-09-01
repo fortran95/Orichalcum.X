@@ -115,14 +115,13 @@ class message_list(object):
         self.protect_pointer()
         if self.message_cache.has_key(self.selected):
             curmsg = self.message_cache[self.selected][self.pointer][1]
-            accname = curmsg['account']
             receiver= self.selected
             message = curmsg['message']
             msgtime = curmsg['timestamp']
-            content = "Orichalcum Message\n\nAccount: %s\nFrom: %s\nTimeStamp: %s\n\n%s" % (accname,receiver,msgtime,message)
+            content = "Orichalcum Message\n\nFrom: %s\nTimeStamp: %s\n\n%s" % (receiver,msgtime,message)
             
-            myFormats = [('Plain Text Format(*.txt)','*.txt')]
-            defname = "%s-%s-%s" % (accname,receiver,msgtime)
+            myFormats = [('Plain Text Format','*.txt')]
+            defname = "OrichalcumX-%s-%s" % (receiver,msgtime)
             fileName = tkFileDialog.asksaveasfilename(parent=self.root,filetypes=myFormats ,title="Save message", initialfile=defname)
             if len(fileName) > 0:
                 #print "Now saving under %s" % fileName
@@ -158,7 +157,7 @@ class message_list(object):
         # Create Message Box
         self.messageframe = Frame(self.root)
 
-        self.message = Text(self.messageframe,width=80,height=30)
+        self.message = Text(self.messageframe,width=80,height=25)
         self.message.config(state=DISABLED)
         self.message.grid(row=0,column=0,padx=3,pady=3)
 
