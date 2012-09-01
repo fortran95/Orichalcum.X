@@ -7,26 +7,41 @@ import notifier,processor,entity,xmpp,utils
 from Tkinter import *
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
+LOCKPATH = os.path.join(BASEPATH,'daemonized.lock')
 
 class RemoteControl(object):
 
     def __init__(self):
         self.daemon = daemon()
-        self.daemon.start()
 
         self.root = Tk()
         self._createWidgets()
+
+        self.root.after(0,self._watchDog)
+        self.root.after(5,self.daemon.start)
         self.root.mainloop()
+
+    def _watchDog(self):
+        global LOCKPATH
+        if not os.path.isfile(LOCKPATH):
+            self._cmdPowerOff()
+        self.root.after(10,self._watchDog)
+
+    def _cmdPowerOff(self):
+        global LOCKPATH
+        try:
+            self.daemon.terminate()
+            self.daemon.join()
+            self.root.destroy()
+            os.remove(LOCKPATH)
+        except:
+            pass
+        sys.exit()
 
     def _createWidgets(self):
         
         self.powerOff = Button(text='停止进程')
-        def cmdPowerOff():
-            self.daemon.terminate()
-            self.daemon.join()
-            self.root.destroy()
-            sys.exit()
-        self.powerOff['command'] = cmdPowerOff
+        self.powerOff['command'] = self._cmdPowerOff
 
         self.powerOff.pack()
 
@@ -116,4 +131,8 @@ class daemon(threading.Thread):
             each[0].join()
    
 if __name__ == '__main__':
+    if os.path.isfile(LOCKPATH):
+        print 'MAKE SURE daemonized.lock HAS BEEN DELETED.'
+        exit()
+    open(LOCKPATH,'w').write('hello')
     rc = RemoteControl()
