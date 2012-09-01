@@ -70,11 +70,16 @@ class message_list(object):
 
     def append_message(self,isOurs,**each):
         if isOurs:
-            showname = utils.myname
+            showname = '%s(我)' % utils.myname
         else:
             showname = self.buddyname
         headline = '%s %s:' % (showname,self._timestr(each['timestamp']))
-        self.history.newrecord(headline,each['message'],isOurs)
+
+        recordid = self.history.newRecord(headline,each['message'],isOurs)
+
+        if isOurs == False and each.has_key('xi') and each['xi']:
+            self.history.paintRecord(recordid,'#FFC800')
+
 
     def quit(self):
         global BASEPATH

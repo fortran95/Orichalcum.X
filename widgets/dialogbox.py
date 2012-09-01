@@ -30,11 +30,12 @@ class DialogBox(Text):
         for each in self.tagconfigs:
             self.tag_config("tag%d" % self.tagconfigs.index(each),each[1])
 
-    def newrecord(self,headline,text,is_ours):
+    def newRecord(self,headline,text,is_ours):
         recordid = hashlib.md5(headline + text).hexdigest()
 
         # Insert Headline
-        headline = '\n' + headline.strip() + '\n'
+        self.insert(END,'\n')
+        headline = headline.strip() + '\n'
         if is_ours:
             self.insert(END,headline,('style.head.local',recordid))
         else:
@@ -48,7 +49,7 @@ class DialogBox(Text):
         j = bson.loads(text)
         plaintext = zlib.decompress(j['t'])
         decorations = j['d']
-        self.insert(END,plaintext)
+        self.insert(END,plaintext,recordid)
         for tagname,indexlist in decorations.items():
             while indexlist:
                 if len(indexlist) >= 2:
@@ -64,8 +65,8 @@ class DialogBox(Text):
         self.yview(END)
         return recordid
 
-    def mark_received(self,tag):
-        self.tag_config(tag + '/content',background='white')
+    def paintRecord(self,recid,color):
+        self.tag_config(recid,background=color)
 
 if __name__ == '__main__':
     root = Tk()
