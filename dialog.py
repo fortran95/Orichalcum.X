@@ -103,50 +103,6 @@ class message_list(object):
             newreadid = self.message_cache[self.selected][self.pointer][0]
             if not newreadid in self.readlist:
                 self.readlist.append(newreadid) # Record the IDs of what we have read.
-    def open_reply_window(self):
-        global BASEPATH
-        self.selected = self.userlist_var.get()
-        self.protect_pointer()
-        if self.message_cache.has_key(self.selected):
-            curmsg = self.message_cache[self.selected][self.pointer][1]
-            receiver= self.selected
-            #print "command: python send.py -r %s -a %s" % (receiver,accname)
-            subprocess.Popen(['python',os.path.join(BASEPATH,'send.py'),'-r',receiver])
-    def save_message(self):
-        self.selected = self.userlist_var.get()
-        self.protect_pointer()
-        if self.message_cache.has_key(self.selected):
-            curmsg = self.message_cache[self.selected][self.pointer][1]
-            receiver= self.selected
-            message = curmsg['message']
-            msgtime = curmsg['timestamp']
-            
-            myFormats = [('无样式文本','*.txt'),('专有样式文本','*.oxt')]
-            defname = "OrichalcumX-%s-%d" % (receiver,int(msgtime))
-            fileName = tkFileDialog.asksaveasfilename(parent=self.root,filetypes=myFormats ,title="Save message", initialfile=defname)
-            if fileName.endswith('.txt'):
-                content = "OrichalcumX Message\n\nFrom: %s\nTimeStamp: %s\n\n%s" % (receiver,msgtime,rich2plain(message))
-            elif fileName.endswith('.oxt'):
-                content = "OrichalcumX Message\n\nFrom: %s\nTimeStamp: %s\n\n%s" % (receiver,msgtime,message.encode('base64'))
-
-            if len(fileName) > 0:
-                #print "Now saving under %s" % fileName
-                try:
-                    f = open(fileName,'w+')
-                    f.write(content)
-                    f.close()
-                except Exception,e:
-                    print e
-    def protect_pointer(self):
-        if self.pointer < 0:
-            self.pointer = 0
-        if self.message_cache.has_key(self.selected):
-            if self.pointer > len(self.message_cache[self.selected]) - 1:
-                self.pointer = len(self.message_cache[self.selected]) - 1
-    def pointer_shift(self,offset):
-        self.pointer = self.pointer + offset
-        self.protect_pointer()
-        self.show_user_message()
     def createWidgets(self):
         # Create Labels
         self.label1 = Label(self.root)
