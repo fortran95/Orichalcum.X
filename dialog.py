@@ -6,6 +6,7 @@ from widgets.richtextbox import RichTextBox,rich2plain
 from widgets.dialogbox import DialogBox
 import utils
 import xisupport
+import entity
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
@@ -127,4 +128,12 @@ class message_list(object):
         # Update the window.
         self.root.update_idletasks()
     
-frmMessage = message_list('orxszlyzr')
+if len(sys.argv) < 2:
+    print 'usage: python dialog.py NAME_OF_YOUR_FRIEND'
+    exit()
+buddy = sys.argv[1].strip()
+if entity.getJIDsByNickname(buddy) == False:
+    print 'Unknown person. Please define persons(entities) in configs/alias.cfg.'
+    exit()
+
+frmMessage = message_list(sys.argv[1])
