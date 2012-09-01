@@ -67,14 +67,3 @@ class DialogBox(Text):
 
     def paintRecord(self,recid,color):
         self.tag_config(recid,background=color)
-
-if __name__ == '__main__':
-    root = Tk()
-    box = DialogBox(root)
-    box.pack(expand=1,fill=BOTH)
-    #box.require_receipt = False
-    box.newrecord('HMX (2012-12-21 05:30:29):','大叔……',False)
-    receipt = box.newrecord('Whirlpool (2012-12-21 05:31:01):','哈' * 50 + '.' * 102,True)
-#    box.mark_received(receipt)
-    box.newrecord('HMX (2012-12-21 05:32:00):','= =......',False)
-    root.mainloop()
