@@ -24,6 +24,7 @@ class message_list(object):
         self.buddyname = buddyname
         self.recordfile = os.path.join(BASEPATH,'cache',self.buddyname.encode('hex') + '.cache')
         self.createWidgets()
+        self.bindEvents()
         
         # Center the Window and set it un-resizable.
         utils.center_window(self.root)
@@ -91,6 +92,7 @@ class message_list(object):
 
         plainmessage = rich2plain(message).strip()
         if plainmessage == '':
+            self.replybox.clear()
             self.replybox.flash(2)
             return
 
@@ -111,9 +113,10 @@ class message_list(object):
         # clear input box
         self.replybox.clear()
 
-    def send_plain(self):
+    def send_plain(self,events=None):
         self._do_send(self.replybox.text(),False)
-    def send_crypt(self):
+        return
+    def send_crypt(self,events=None):
         self._do_send(self.replybox.text(),True)
 
     def createWidgets(self):      
@@ -136,7 +139,10 @@ class message_list(object):
         
         # Update the window.
         self.root.update_idletasks()
-    
+
+    def bindEvents(self):
+        self.replybox.bind('<Control-Return>',self.send_plain)
+
 if len(sys.argv) < 2:
     print 'usage: python dialog.py NAME_OF_YOUR_FRIEND'
     exit()

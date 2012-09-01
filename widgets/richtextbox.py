@@ -26,6 +26,7 @@ class RichTextBox(Frame):
     def _createWidgets(self,**argv):
         self.editorbar = Frame(self)
         self.textbox = Text(self,font=FONT,**argv)
+        self.textbox.config(foreground='#000',background='#FFF')
         self.editorbar.buttons = []
 
         for each in self.tagconfigs:
@@ -49,7 +50,11 @@ class RichTextBox(Frame):
         self.textbox.config(state=DISABLED)
 
     def clear(self):
+        self.textbox.config(foreground='#000',background='#FFF')
         self.textbox.delete(1.0,END)
+
+    def bind(self,events,callback):
+        self.textbox.bind(events,callback)
 
     def flash(self,times,background='#F22'):
         def _flashfunc(t=times,bg=background):

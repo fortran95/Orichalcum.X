@@ -30,7 +30,10 @@ class DialogBox(Text):
         for each in self.tagconfigs:
             self.tag_config("tag%d" % self.tagconfigs.index(each),each[1])
 
+        self.config(state=DISABLED)
+
     def newRecord(self,headline,text,is_ours):
+        self.config(state=NORMAL)
         recordid = hashlib.md5(headline + text).hexdigest()
 
         # Insert Headline
@@ -63,6 +66,7 @@ class DialogBox(Text):
 
         
         self.yview(END)
+        self.config(state=DISABLED)
         return recordid
 
     def paintRecord(self,recid,color):
