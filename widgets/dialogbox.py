@@ -22,7 +22,7 @@ class DialogBox(Text):
 
     def __init__(self,master,**options):
         Text.__init__(self,master,**options)
-        self.config(padx=7,pady=5)
+        self.config(padx=7,pady=5,font=FONT)
 
         self.tag_config('style.head.local',foreground='#00A',font=FONT+('bold',))
         self.tag_config('style.head.buddy',foreground='#A00',font=FONT+('bold',))
@@ -34,7 +34,7 @@ class DialogBox(Text):
         recordid = hashlib.md5(headline + text).hexdigest()
 
         # Insert Headline
-        headline = headline.strip() + '\n'
+        headline = '\n' + headline.strip() + '\n'
         if is_ours:
             self.insert(END,headline,('style.head.local',recordid))
         else:

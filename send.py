@@ -25,7 +25,7 @@ if not entity.getJIDsByNickname(recname):
     exit()
 
 if not options.omit:
-
+    user_usexi = False
     # Read file to get message
     if options.input == False:
         try:

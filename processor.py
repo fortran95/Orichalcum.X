@@ -38,7 +38,7 @@ def handle(message,sender):
 
 def handle_kernel(sender,receiver,tag,message,isxi):
     global BASEPATH
-    MSGDB_PATH0 = os.path.join(BASEPATH,'configs','msgdb.')
+    MSGDB_PATH0 = os.path.join(BASEPATH,'cache','msgdb.')
     try:
         guidance = parse(message,tag,sender)    # Mix rubbish up. Poor design.
         tag = guidance['more']
@@ -63,17 +63,23 @@ def handle_kernel(sender,receiver,tag,message,isxi):
         db = shelve.open(MSGDB_PATH0 + 'db' , writeback=True)
         newpiece = {'message':message,'timestamp':guidance['timestamp'],'xi':isxi}
         newhash = base64.encodestring(hashlib.md5(message + str(guidance['timestamp'])).digest()).strip()
-        newkey = base64.encodestring(sender)
+        newkey = sender.strip().encode('hex')
+
+        do_notify = False
         if db.has_key(newkey) == False:
+            do_notify = True
             db[newkey] = {newhash:newpiece}
         else:
-            db[newkey][newhash] = newpiece
+            if not db[newkey].has_key(newhash):
+                do_notify = True
+                db[newkey][newhash] = newpiece
         db.close()
 
-        if isxi:
-            notifier.gnotify(u'来自 %s 的机密消息' % sender, rich2plain(message))
-        else:
-            notifier.gnotify(u'来自 %s 的普通消息' % sender, rich2plain(message))
+        if do_notify:
+            if isxi:
+                notifier.gnotify(u'来自 %s 的机密消息' % sender, rich2plain(message))
+            else:
+                notifier.gnotify(u'来自 %s 的普通消息' % sender, rich2plain(message))
     except Exception,e:
         print "Error saving message: %s" % e
     # Remove database lock
