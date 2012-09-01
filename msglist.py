@@ -153,7 +153,7 @@ class message_list(object):
         # Create Message Box
         self.messageframe = Frame(self.root)
 
-        self.message = Text(self.messageframe,width=50,height=20)
+        self.message = Text(self.messageframe,width=80,height=30)
         self.message.config(state=DISABLED)
         self.message.grid(row=0,column=0,padx=3,pady=3)
 
