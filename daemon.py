@@ -91,8 +91,9 @@ class daemon(threading.Thread):
 
     def feedDog(self):
         self.lastfeed = time.time()
-    def watchDog(self)
+    def watchDog(self):
         if time.time() - self.lastfeed > 5:
+            print "Daemon Watchdog: Terminate!"
             self.terminate()
 
     def terminate(self):
