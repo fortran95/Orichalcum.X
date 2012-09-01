@@ -67,9 +67,7 @@ class XMPP(threading.Thread):
                                           mtype="chat")
 
                 self.outgoing_lock.release()
-
-            time.sleep(1)
-
+            time.sleep(0.1)
         # Exiting
         if self.connect_status == 2:
             self.xmpp.disconnect(wait=True)

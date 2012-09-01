@@ -25,7 +25,35 @@ class RemoteControl(object):
         global LOCKPATH
         if not os.path.isfile(LOCKPATH):
             self._cmdPowerOff()
-        self.root.after(10,self._watchDog)
+
+        # Feed Daemon Watchdog
+        self.daemon.feedDog()
+
+        # Report clients status
+        report = ''
+        for each in self.daemon.clients:
+            report += '%3d.( %4d 信息待发)' % (self.daemon.clients.index(each)+1,len(each[1]))
+            if each[0].isAlive:
+                report += '活动'
+            else:
+                report += '停止'
+            report += ' '
+            c = each[0].connect_status
+            if c == 2:
+                report += '已经连接'
+            elif c == 1:
+                report += '正在连接'
+            elif c == 0:
+                report += '连接已断'
+            elif c == -1:
+                report += '错误中止'
+            report += '\n'
+        self.statusBox.config(state=NORMAL)
+        self.statusBox.delete(1.0,END)
+        self.statusBox.insert(END,report)
+        self.statusBox.config(state=DISABLED)
+
+        self.root.after(50,self._watchDog)
 
     def _cmdPowerOff(self):
         global LOCKPATH
@@ -43,7 +71,10 @@ class RemoteControl(object):
         self.powerOff = Button(text='停止进程')
         self.powerOff['command'] = self._cmdPowerOff
 
-        self.powerOff.pack()
+        self.statusBox = Text(height=20,width=20)
+
+        self.powerOff.grid(row=0,column=0)
+        self.statusBox.grid(row=1,column=0)
 
     
 class daemon(threading.Thread):
@@ -57,6 +88,12 @@ class daemon(threading.Thread):
         self._read_accounts()
         for jid,password in self.accounts:
             self.clients.append([xmpp.XMPP(jid,password),[]])
+
+    def feedDog(self):
+        self.lastfeed = time.time()
+    def watchDog(self)
+        if time.time() - self.lastfeed > 5:
+            self.terminate()
 
     def terminate(self):
         self.sig_terminate.set()
@@ -74,6 +111,8 @@ class daemon(threading.Thread):
         for each in self.clients:
             each[0].start()
         print "All XMPP Clients fired."
+        print "Feed watchdog."
+        self.feedDog()
 
         # begin looping
         last_message_notify = 0
@@ -122,13 +161,20 @@ class daemon(threading.Thread):
             if notify_timed > 60:
                 processor.notify()
                 last_message_notify = now
+            # Do WatchDog
+            self.watchDog()
             # Now All Job Done
-            time.sleep(0.5)
+            time.sleep(0.1)
 
         print "Exit the program."
         for each in self.clients:
             each[0].terminate()
-            each[0].join()
+            each[0].join(10)
+            if each[0].isAlive():
+                try:
+                    each[0].abort()
+                except:
+                    pass
    
 if __name__ == '__main__':
     if os.path.isfile(LOCKPATH):
