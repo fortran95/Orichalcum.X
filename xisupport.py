@@ -12,10 +12,10 @@ from letter import letter
 
 def xi_process_outgoing():
     global BASEPATH
-    os.popen('python ' + os.path.join(BASEPATH,'postoffice','outbox.py'))
+    os.system('python ' + os.path.join(BASEPATH,'postoffice','outbox.py'))
 def xi_process_incoming():
     global BASEPATH
-    os.popen('python ' + os.path.join(BASEPATH,'postoffice','inbox.py'))
+    os.system('python ' + os.path.join(BASEPATH,'postoffice','inbox.py'))
 
 def xi_queue(sender,receiver,tag,message,outgoing=True):
     global BOXPATH,VIA
@@ -25,9 +25,9 @@ def xi_queue(sender,receiver,tag,message,outgoing=True):
     else:
         midpath = 'incoming'
     
-    content = u'SENDER %s\nRECEIVER %s\nVIA %s\nTAG %s\n\n%s' % (sender,receiver,VIA,tag,message)
+    content = 'SENDER %s\nRECEIVER %s\nVIA %s\nTAG %s\n\n%s' % (sender,receiver,VIA,tag,message)
 
-    filename = os.path.join(BOXPATH,midpath,'queue',hashlib.md5(str(random.random()) + tag).hexdigest())
+    filename = os.path.join(BOXPATH,midpath,'queue',hashlib.md5(str(random.random()) + tag + content).hexdigest())
 
     open(filename,'w+').write(content)
 
