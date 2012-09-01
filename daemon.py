@@ -9,14 +9,23 @@ from Tkinter import *
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 LOCKPATH = os.path.join(BASEPATH,'daemonized.lock')
 
+def restart_program():
+    """Restarts the current program.
+    Note: this function does not return. Any cleanup action (like
+    saving data) must be done before calling this function."""
+    python = sys.executable
+    os.execl(python, python, * sys.argv)
+
 class RemoteControl(object):
 
     def __init__(self):
         self.daemon = daemon()
 
         self.root = Tk()
+        self.root.title("Orichalcum.X 背景进程控制器")
+        self.root.resizable(0,0)
         self._createWidgets()
-
+        self.root.protocol("WM_DELETE_WINDOW", self._cmdPowerOff)
         self.root.after(0,self._watchDog)
         self.root.after(5,self.daemon.start)
         self.root.mainloop()
@@ -54,16 +63,23 @@ class RemoteControl(object):
         self.statusBox.config(state=DISABLED)
 
         self.root.after(50,self._watchDog)
-
-    def _cmdPowerOff(self):
+    def _cleanUp(self):
         global LOCKPATH
         try:
+            self.powerOff.config(state=DISABLED)
+            self.restart.config(state=DISABLED)
+            self.root.update_idletasks()
             self.daemon.terminate()
             self.daemon.join()
             self.root.destroy()
             os.remove(LOCKPATH)
         except:
             pass
+    def _cmdRestart(self,e=None):
+        self._cleanUp()
+        restart_program()
+    def _cmdPowerOff(self,e=None):
+        self._cleanUp()
         sys.exit()
 
     def _createWidgets(self):
@@ -71,10 +87,14 @@ class RemoteControl(object):
         self.powerOff = Button(text='停止进程')
         self.powerOff['command'] = self._cmdPowerOff
 
-        self.statusBox = Text(height=20,width=35)
+        self.restart = Button(text='重新启动')
+        self.restart['command'] = self._cmdRestart
+
+        self.statusBox = Text(height=15,width=40)
 
         self.powerOff.grid(row=0,column=0)
-        self.statusBox.grid(row=1,column=0)
+        self.restart.grid(row=0,column=1)
+        self.statusBox.grid(row=1,column=0,columnspan=2)
 
     
 class daemon(threading.Thread):
