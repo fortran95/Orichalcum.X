@@ -121,7 +121,7 @@ class message_list(object):
             content = "Orichalcum Message\n\nFrom: %s\nTimeStamp: %s\n\n%s" % (receiver,msgtime,message)
             
             myFormats = [('Plain Text Format','*.txt')]
-            defname = "OrichalcumX-%s-%s" % (receiver,msgtime)
+            defname = "OrichalcumX-%s-%d" % (receiver,int(msgtime))
             fileName = tkFileDialog.asksaveasfilename(parent=self.root,filetypes=myFormats ,title="Save message", initialfile=defname)
             if len(fileName) > 0:
                 #print "Now saving under %s" % fileName
