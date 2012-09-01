@@ -9,6 +9,7 @@ class message_list(object):
     message_cache = {}
     pointer = 0
     readlist = []
+    _quit_clickagain = False
     def _sort_messages(self,inp):
         s = sorted(inp.iteritems(),key=lambda d:d[1]['timestamp'])
         return s
@@ -33,6 +34,10 @@ class message_list(object):
         self.root.mainloop()
     def quit(self):
         global BASEPATH
+        if not self._quit_clickagain:
+            self.exitbutton.config(text='再次点击退出',bg='Red',fg='White')
+            self._quit_clickagain = True
+            return
         # Will destroy all messages. First, lock up the database.
         msgdb_path0 = os.path.join(BASEPATH,'configs','msgdb')
         while True:
@@ -191,10 +196,8 @@ class message_list(object):
         self.replybutton['command'] = self.open_reply_window
         self.replybutton.grid(row=4,column=1,columnspan=2,sticky=N+S+W+E)
         # Create Emergency Exit button
-        self.exitbutton = Button(self.root)
+        self.exitbutton = Button(self.root,fg='Red')
         self.exitbutton['text'] = '关闭窗口（销毁已读信息）'
-        self.exitbutton['bg'] = 'Red'
-        self.exitbutton['fg'] = 'White'
         self.exitbutton['command'] = self.quit
         self.exitbutton.grid(row=5,column=0,columnspan=3,sticky=N+S+W+E)
         
