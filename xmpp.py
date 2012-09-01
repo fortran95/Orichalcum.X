@@ -28,6 +28,9 @@ class XMPP(threading.Thread):
         self.xmpp.add_event_handler("session_start",self._onConnected)
         self.xmpp.add_event_handler("message",self._onMessage)
         self.xmpp.add_event_handler("disconnected",self._onDisconnected)
+        self.xmpp.add_event_handler("failed_auth",self._onFailedAuth)
+        self.xmpp.add_event_handler("socket_error",self._onSocketError)
+        
 
     def run(self):
         while not self._sig_terminate.isSet():
@@ -71,21 +74,27 @@ class XMPP(threading.Thread):
         if self.connect_status == 2:
             self.xmpp.disconnect(wait=True)
         return
+    def _onSocketError(self,event):
+        print "Socket Error!"
+        self.xmpp.disconnect(wait=False)
+    def _onFailedAuth(self,event):
+        print "Authentication failed"
+        self.connect_status = -1
+        self.terminate()
 
     def _onConnected(self,event):
-#        print "On Connected"
+        print "Connected"
         self.xmpp.sendPresence()
-        self.connect_status = 2
+        if self.connect_status >= 0:
+            self.connect_status = 2
 
     def _onDisconnected(self,event):
-#        print "On Disconnected"
-        if self.connect_status == 1:
-            self.terminate()
-            self.connect_status = -1
-        self.connect_status = 0
+        print "Disconnected"
+        if self.connect_status >= 0:
+            self.connect_status = 0
 
     def _onMessage(self,message):
-#        print "On Message"
+        print "Got Message"
         self.incoming_lock.acquire()
        
         if message["type"] in ("chat", "normal"):

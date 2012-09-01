@@ -9,31 +9,25 @@ from Tkinter import *
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
 class RemoteControl(object):
+
     def __init__(self):
-        self.root = Tk()
         self.daemon = daemon()
+        self.daemon.start()
+
+        self.root = Tk()
         self._createWidgets()
         self.root.mainloop()
 
     def _createWidgets(self):
         
-        self.powerOn = Button(text='启动进程')
-        def cmdPowerOn():
-            self.daemon.start()
-            self.powerOn['state'] = DISABLED
-            self.powerOff['state'] = NORMAL
-        self.powerOn['command'] = cmdPowerOn
-
         self.powerOff = Button(text='停止进程')
         def cmdPowerOff():
             self.daemon.terminate()
             self.daemon.join()
-            self.powerOff['state'] = DISABLED
-            self.powerOn['state'] = NORMAL
-        self.powerOff['state'] = DISABLED
+            self.root.destroy()
+            sys.exit()
         self.powerOff['command'] = cmdPowerOff
 
-        self.powerOn.pack()
         self.powerOff.pack()
 
     
