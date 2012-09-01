@@ -5,6 +5,19 @@ from Tkinter import *
 
 import sleekxmpp
 
+class MyClientXMPP(sleekxmpp.ClientXMPP):
+    def __init__(self,jid,password):
+        sleekxmpp.ClientXMPP.__init__(self,jid,password)
+        self.feedDog()
+        self.watchDog()
+    def feedDog(self):
+        self.__last_feed = time.time()
+    def watchDog(self):
+        if time.time() - self.__last_feed > 5:
+            print "Watchdog barks."
+            self.abort()
+        threading.Timer(0.1,self.watchDog)
+
 class XMPP(threading.Thread):
     # XMPP queue stores incoming and outgoing messages.
     # Item(s) in the queue are dict(s). Possible keys are: jid, message
@@ -22,7 +35,7 @@ class XMPP(threading.Thread):
         threading.Thread.__init__(self)
         self._sig_terminate = threading.Event()
 
-        self.xmpp = sleekxmpp.ClientXMPP(jid,password)
+        self.xmpp = MyClientXMPP(jid,password)
         self.jid = jid
 
         self.xmpp.add_event_handler("session_start",self._onConnected)
@@ -43,7 +56,7 @@ class XMPP(threading.Thread):
                     self.connect_status = 1
                 except Exception,e:
                     print "XMPP deliver module: failed connecting: %s" % e
-                    self.terminate()
+                    #self.terminate()
             elif self.connect_status == 2:
                 # Scheduled to send presence
                 if (nowtime - self.schedule_rec['send_presence'] > 
@@ -67,6 +80,7 @@ class XMPP(threading.Thread):
                                           mtype="chat")
 
                 self.outgoing_lock.release()
+            self.xmpp.feedDog()
             time.sleep(0.1)
         # Exiting
         if self.connect_status == 2:

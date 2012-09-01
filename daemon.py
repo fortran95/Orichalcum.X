@@ -42,7 +42,7 @@ class RemoteControl(object):
             if c == 2:
                 report += '已经连接'
             elif c == 1:
-                report += '正在连接'
+                report += '连接中...'
             elif c == 0:
                 report += '连接已断'
             elif c == -1:
@@ -71,7 +71,7 @@ class RemoteControl(object):
         self.powerOff = Button(text='停止进程')
         self.powerOff['command'] = self._cmdPowerOff
 
-        self.statusBox = Text(height=20,width=20)
+        self.statusBox = Text(height=20,width=35)
 
         self.powerOff.grid(row=0,column=0)
         self.statusBox.grid(row=1,column=0)
