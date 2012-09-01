@@ -46,6 +46,9 @@ class RichTextBox(Frame):
     def disable(self):
         self.textbox.config(state=DISABLED)
 
+    def clear(self):
+        self.textbox.delete(1.0,END)
+
     def _inRange(self,tagname,probe):
         ranges = self.textbox.tag_ranges(tagname)
         probe = float(probe)

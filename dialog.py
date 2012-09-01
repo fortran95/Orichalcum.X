@@ -61,12 +61,19 @@ class message_list(object):
         # display messages    
         while self.message_queue:
             each = self.message_queue.pop(0)
-            self.append_message(each,False)
+            self.append_message(False,**each)
         
         self.root.after(100,self.readMessages)
+    
+    def _timestr(self,timestamp):
+        return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(timestamp))
 
-    def append_message(self,each,isOurs):
-        headline = '%s %s' % (self.buddyname,each['timestamp'])
+    def append_message(self,isOurs,**each):
+        if isOurs:
+            showname = utils.myname
+        else:
+            showname = self.buddyname
+        headline = '%s %s:' % (showname,self._timestr(each['timestamp']))
         self.history.newrecord(headline,each['message'],isOurs)
 
     def quit(self):
@@ -85,6 +92,10 @@ class message_list(object):
         except Exception,e:
             print e
         os.remove(cache)
+
+        # Add to history
+        self.append_message(True,message=message,timestamp=time.time())
+
     def send_plain(self):
         self._do_send(self.replybox.text(),False)
     def send_crypt(self):
