@@ -4,13 +4,18 @@ from Tkinter import *
 
 import bson
 
+FONT = ('sans',11)
+
 class RichTextBox(Frame):
     
-    tagconfigs = {'b':('加粗',   {'foreground':'#F00'}),
-                  'i':('斜体',   {}),
-                  'u':('下划线', {'underline':True}),
-                 }
-
+    tagconfigs = [('B',   {'font':FONT + ('bold',)}),
+                  ('H',   {'font':FONT + ('bold italic',)}),
+                  ('H',   {'font':FONT + ('italic',)}),
+                  ('_',   {'underline':True}),
+                  ('红',  {'foreground':'#F00'}),
+                  ('蓝',  {'foreground':'#00B'}),
+                  ('绿',  {'foreground':'#070'}),
+                 ]
     
     def __init__(self,root,**argv):
         Frame.__init__(self,root,**argv)
@@ -18,16 +23,19 @@ class RichTextBox(Frame):
 
     def _createWidgets(self):
         self.editorbar = Frame(self)
-        self.textbox = Text(self,height=10)
-        self.editorbar.buttons = {}
+        self.textbox = Text(self,height=10,font=FONT)
+        self.editorbar.buttons = []
         i = 0
-        for key in self.tagconfigs:
-            self.editorbar.buttons[key] = Button(self.editorbar,text=self.tagconfigs[key][0])
-            self.textbox.tag_config(key,self.tagconfigs[key][1])
-            def _barbtn_action(b=self.editorbar.buttons[key],tagname=key):
-                self.textbox.tag_add(tagname,SEL_FIRST,SEL_LAST)
-            self.editorbar.buttons[key]['command'] = _barbtn_action
-            self.editorbar.buttons[key].pack(side=LEFT,anchor=W)
+        for each in self.tagconfigs:
+            self.editorbar.buttons.append(Button(self.editorbar,text=each[0],**each[1]))
+            self.textbox.tag_config("tag%d" % self.tagconfigs.index(each),each[1])
+            def _barbtn_action(b=self.editorbar.buttons[-1],tagname="tag%d" % self.tagconfigs.index(each)):
+                try:
+                    self.textbox.tag_add(tagname,SEL_FIRST,SEL_LAST)
+                except:
+                    pass
+            self.editorbar.buttons[-1]['command'] = _barbtn_action
+            self.editorbar.buttons[-1].pack(side=LEFT,anchor=W)
             i += 1
 
 
@@ -54,12 +62,13 @@ class RichTextBox(Frame):
     def text(self):
         plaintext = zlib.compress(unicode(self.textbox.get(1.0,END)).encode('utf-8'),9)
         decorations = {}
-        for key in self.tagconfigs:
-            decorations[key] = []
-            ranges = self.textbox.tag_ranges(key)
+        for each in self.tagconfigs:
+            decid = str(self.tagconfigs.index(each))
+            decorations[decid] = []
+            ranges = self.textbox.tag_ranges("tag%d" % int(decid))
             for textindex in ranges:
                 tib,tie = textindex.string.split('.')
-                decorations[key].append((int(tib),int(tie)))
+                decorations[decid].append((int(tib),int(tie)))
         return bson.dumps({'t':plaintext,'d':decorations})
 
     def load(self,inp):
@@ -79,7 +88,7 @@ class RichTextBox(Frame):
                     cstart = r(indexlist[0])
                     cend = END
                     indexlist = []
-                self.textbox.tag_add(tagname,cstart,cend)
+                self.textbox.tag_add("tag%d" % int(tagname),cstart,cend)
 
 def rich2plain(inp):
     j = bson.loads(inp)
@@ -96,7 +105,7 @@ if __name__ == '__main__':
     c.grid(row=2,column=0)
     def cmd(x=a,y=c):
         text = x.text()
-        print rich2plain(text)
+#        print rich2plain(text)
         y.load(text)
     b['command'] = cmd
     root.mainloop()
