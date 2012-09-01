@@ -18,14 +18,14 @@ class RichTextBox(Frame):
                  ]
     
     def __init__(self,root,**argv):
-        Frame.__init__(self,root,**argv)
-        self._createWidgets()
+        Frame.__init__(self,root)
+        self._createWidgets(**argv)
 
-    def _createWidgets(self):
+    def _createWidgets(self,**argv):
         self.editorbar = Frame(self)
-        self.textbox = Text(self,height=10,font=FONT)
+        self.textbox = Text(self,font=FONT,**argv)
         self.editorbar.buttons = []
-        i = 0
+
         for each in self.tagconfigs:
             self.editorbar.buttons.append(Button(self.editorbar,text=each[0],**each[1]))
             self.textbox.tag_config("tag%d" % self.tagconfigs.index(each),each[1])
@@ -36,8 +36,6 @@ class RichTextBox(Frame):
                     pass
             self.editorbar.buttons[-1]['command'] = _barbtn_action
             self.editorbar.buttons[-1].pack(side=LEFT,anchor=W)
-            i += 1
-
 
         self.editorbar.grid(column=0,columnspan=2,row=0)
         self.textbox.grid(row=1,column=0)

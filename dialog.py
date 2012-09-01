@@ -5,6 +5,7 @@ import shelve,os,sys,copy,base64,time,tkMessageBox,subprocess,tkFileDialog
 
 from widgets.richtextbox import RichTextBox,rich2plain
 from widgets.dialogbox import DialogBox
+import utils
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
@@ -16,13 +17,7 @@ class message_list(object):
         self.createWidgets()
         
         # Center the Window and set it un-resizable.
-        w = self.root.winfo_width()
-        h = self.root.winfo_height()
-        ws = self.root.winfo_screenwidth()
-        hs = self.root.winfo_screenheight()
-        x = (ws/2) - (w/2) # calculate position x, y
-        y = (hs/2) - (h/2)
-        self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))
+        utils.center_window(self.root)
         self.root.resizable(0,0)
              
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
@@ -31,16 +26,22 @@ class message_list(object):
         global BASEPATH
         # Kill the dialog
         self.root.destroy()
+    def testcommand(self):
+        self.history.newrecord('line',self.replybox.text(),True)
     def createWidgets(self):      
         # Create Message Box
         self.history = DialogBox(self.root)
         self.history.grid(row=0,column=0,columnspan=2,sticky=N+S+W+E)
 
-        self.replybox = RichTextBox(self.root,width=80,height=25)
-        self.replybox.grid(row=1,column=0)
+        self.replybox = RichTextBox(self.root,width=80,height=5)
+        self.replybox.grid(row=1,column=0,rowspan=2)
 
-        self.sendbutton = Button(self.root,text=u'发送')
-        self.sendbutton.grid(row=1,column=1,sticky=N+S+E+W)
+        self.plainsend = Button(self.root,text=u'明文发送',width=20)
+        self.plainsend.grid(row=1,column=1,sticky=N+S+E+W)
+        self.plainsend['command'] = self.testcommand
+
+        self.cryptsend = Button(self.root,text=u'加密发送')
+        self.cryptsend.grid(row=2,column=1,sticky=N+S+E+W)
         
         # Update the window.
         self.root.update_idletasks()

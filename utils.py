@@ -7,6 +7,14 @@ usercfg.read(os.path.join(BASEPATH,'configs','personal.cfg'))
 
 myname  = usercfg.get('general','username').strip()
 
+def center_window(root):
+    w = root.winfo_width()
+    h = root.winfo_height()
+    ws = root.winfo_screenwidth()
+    hs = root.winfo_screenheight()
+    x = (ws/2) - (w/2) # calculate position x, y
+    y = (hs/2) - (h/2)
+    root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
 def stripJID(jid):
     if '/' in jid:
