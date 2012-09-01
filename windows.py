@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from Tkinter import *
+
+from widgets.richtextbox import RichTextBox
 import online
 
 usertext = ''
@@ -46,12 +48,12 @@ class Editor(object):
         self.account['text'] = account
         self.account.grid(row=1,column=1,columnspan=2,sticky=N+E+W+S)
         
-        self.editor = Text(master)
+        self.editor = RichTextBox(master)
         self.editor.grid(row=2,column=0,columnspan=3)
         
         def save(m=master,u=False):
             global usertext,usexi
-            usertext = self.editor.get(1.0,END)
+            usertext = self.editor.text()
             usexi    = u
             m.quit()
         def save_usexi(m=master):

@@ -3,6 +3,8 @@
 from Tkinter import *
 import shelve,os,sys,copy,base64,time,tkMessageBox,subprocess,tkFileDialog
 
+from widgets.richtextbox import RichTextBox,rich2plain
+
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
 class message_list(object):
@@ -118,11 +120,15 @@ class message_list(object):
             receiver= self.selected
             message = curmsg['message']
             msgtime = curmsg['timestamp']
-            content = "Orichalcum Message\n\nFrom: %s\nTimeStamp: %s\n\n%s" % (receiver,msgtime,message)
             
-            myFormats = [('Plain Text Format','*.txt')]
+            myFormats = [('无样式文本','*.txt'),('专有样式文本','*.oxt')]
             defname = "OrichalcumX-%s-%d" % (receiver,int(msgtime))
             fileName = tkFileDialog.asksaveasfilename(parent=self.root,filetypes=myFormats ,title="Save message", initialfile=defname)
+            if fileName.endswith('.txt'):
+                content = "OrichalcumX Message\n\nFrom: %s\nTimeStamp: %s\n\n%s" % (receiver,msgtime,rich2plain(message))
+            elif fileName.endswith('.oxt'):
+                content = "OrichalcumX Message\n\nFrom: %s\nTimeStamp: %s\n\n%s" % (receiver,msgtime,message.encode('base64'))
+
             if len(fileName) > 0:
                 #print "Now saving under %s" % fileName
                 try:
@@ -157,8 +163,8 @@ class message_list(object):
         # Create Message Box
         self.messageframe = Frame(self.root)
 
-        self.message = Text(self.messageframe,width=80,height=25)
-        self.message.config(state=DISABLED)
+        self.message = RichTextBox(self.messageframe,width=80,height=25)
+        self.message.disable()
         self.message.grid(row=0,column=0,padx=3,pady=3)
 
         self.messageframe.grid(row=1,column=0,columnspan=3)
@@ -203,16 +209,15 @@ class message_list(object):
         # Update the window.
         self.root.update_idletasks()
     def set_message(self,message):
-        self.message.config(state=NORMAL)
+        self.message.enable()
 
-        self.message.delete(1.0,END)
-        self.message.insert(END,message['message'])
+        self.message.load(message['message'])
         if message['xi']:
             self.messageframe.config(bg='#3BBD08')
         else:
             self.messageframe.config(bg='#FFF')
 
-        self.message.config(state=DISABLED)
+        self.message.disable()
 
 
         timestamp = int(message['timestamp']) - time.timezone

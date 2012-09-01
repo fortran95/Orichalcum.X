@@ -43,10 +43,10 @@ class RichTextBox(Frame):
         self.textbox.grid(row=1,column=0)
 
     def enable(self):
-        self.config(state=NORMAL)
+        self.textbox.config(state=NORMAL)
 
     def disable(self):
-        self.config(state=DISABLED)
+        self.textbox.config(state=DISABLED)
 
     def _inRange(self,tagname,probe):
         ranges = self.textbox.tag_ranges(tagname)
