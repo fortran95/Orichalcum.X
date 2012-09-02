@@ -2,6 +2,8 @@
 from Tkinter import *
 import shelve,os,sys,copy,base64,time,tkMessageBox,threading,tkFileDialog,random,hashlib
 
+import bson
+
 from widgets.richtextbox import RichTextBox,rich2plain
 from widgets.dialogbox import DialogBox
 import utils
@@ -15,6 +17,9 @@ class message_list(object):
 
     message_queue = []
     filter_hashes = []
+    unhandled_receipts = []
+
+    UNHANDLED_RECEIPT_COLOR = '#FCC'
 
     def __init__(self,buddyname):
         global BASEPATH
@@ -63,12 +68,25 @@ class message_list(object):
         # display messages    
         while self.message_queue:
             each = self.message_queue.pop(0)
-            self.append_message(False,**each)
+            self.handle_received_message(False,**each)
         
         self.root.after(100,self.readMessages)
     
     def _timestr(self,timestamp):
         return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(timestamp))
+
+    def handle_received_message(self,isOurs,**argv):
+        b = bson.loads(argv['message'])
+        if b['t'] == 1:
+            self.append_message(isOurs,
+                                message=b['d'],
+                                timestamp=argv['timestamp'],
+                                xi=argv['xi'])
+        if b['t'] == 2:
+            recid = b['d'].strip().lower()
+            if recid in self.unhandled_receipts:
+                self.history.paintRecord(recid,self.history['background'])
+            self.unhandled_receipts.remove(recid)
 
     def append_message(self,isOurs,**each):
         if isOurs:
@@ -81,13 +99,30 @@ class message_list(object):
 
         if isOurs == False and each.has_key('xi') and each['xi']:
             self.history.paintRecord(recordid,'#FFC800')
-
+        
+        return recordid
 
     def quit(self):
         global BASEPATH
         # Kill the dialog
         self.root.withdraw()
         self.root.destroy()
+    def _send_core(self,data,tag,crypt):
+        message = bson.dumps({'d':data,'t':tag})
+        cache = os.path.join(BASEPATH,
+                             'cache',
+                             hashlib.md5(message + str(random.random())).hexdigest())
+        open(cache,'w').write(message)
+        try:
+            cmd = "python %s -r %s -i %s" % (os.path.join(BASEPATH,'send.py'),
+                                             self.buddyname,cache)
+            if crypt:
+                cmd += ' -x'
+            os.system(cmd)
+        except Exception,e:
+            print e
+        os.remove(cache)
+        
     def _do_send(self,message,crypt=True):
         global BASEPATH
 
@@ -97,19 +132,14 @@ class message_list(object):
             self.replybox.flash(2)
             return
 
-        cache = os.path.join(BASEPATH,'cache',hashlib.md5(message + str(random.random())).hexdigest())
-        open(cache,'w').write(message)
-        try:
-            cmd = "python %s -r %s -i %s" % (os.path.join(BASEPATH,'send.py'),self.buddyname,cache)
-            if crypt:
-                cmd += ' -x'
-            os.system(cmd)
-        except Exception,e:
-            print e
-        os.remove(cache)
+        self._send_core(message,1,crypt)
 
         # Add to history
-        self.append_message(True,message=message,timestamp=time.time())
+        recordid = self.append_message(True,message=message,timestamp=time.time()).strip().lower()
+        if self.needReceipt.get():
+            self.unhandled_receipts.append(recordid)
+            self.history.paintRecord(recordid,self.UNHANDLED_RECEIPT_COLOR)
+            self._send_core(recordid,2,False)
 
         # clear input box
         self.replybox.clear()
@@ -117,6 +147,7 @@ class message_list(object):
     def send_plain(self,events=None):
         self._do_send(self.replybox.text(),False)
         return
+
     def send_crypt(self,events=None):
         self._do_send(self.replybox.text(),True)
 
