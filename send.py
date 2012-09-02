@@ -1,7 +1,7 @@
 
 import shelve, ConfigParser, os, sys, json
 from optparse import OptionParser,OptionGroup
-import windows,xisupport,msgpack,entity,utils
+import xisupport,msgpack,entity,utils
 
 def queue_message(receiver,message):
     utils.stack_set('outgoing',{'receiver':receiver,'message':message})
@@ -25,19 +25,10 @@ if not entity.getJIDsByNickname(recname):
     exit()
 
 if not options.omit:
-    user_usexi = False
     # Read file to get message
     if options.input == False:
-        try:
-            userinput = windows.inputbox(recname,myname,(xisupport.XI_ENABLED and options.usexi))
-            message = userinput['text']
-            if message == False:
-                print "User cancelled."
-                exit()
-            user_usexi = userinput['xi']
-        except Exception,e:
-            print "Error getting input: %s" % e
-            exit()
+        print "You must specify where to read input."
+        exit()
     else:
         try:
             fp = open(options.input,'r')
@@ -48,8 +39,10 @@ if not options.omit:
             exit()
 
 # xi.postoffice support here.
-if xisupport.XI_ENABLED and (options.usexi or user_usexi):
-
+if options.usexi:
+    if not xisupport.XI_ENABLED:
+        print "Fatal: cannot connect to Xi system."
+        exit()
     if not options.omit:
         tag = json.dumps({'tag':options.tag}).encode('hex')
         xisupport.xi_queue(myname,recname,tag,message)
