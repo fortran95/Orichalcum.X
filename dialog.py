@@ -115,6 +115,9 @@ class message_list(object):
                 self.history.paintRecord(recordid,'#FFC800')
         else:
             raise Exception('')
+
+        if self.historyScroll.get()[1] == 1.0:
+            self.history.yview(END)
         
         return recordid
 
@@ -171,8 +174,16 @@ class message_list(object):
 
     def createWidgets(self):      
         # Create Message Box
-        self.history = DialogBox(self.root)
-        self.history.grid(row=0,column=0,columnspan=2,sticky=N+S+W+E)
+        self.historyBox = Frame(self.root)
+        self.historyBox.grid(row=0,column=0,columnspan=2,sticky=N+S+W+E)
+
+        self.history = DialogBox(self.historyBox)
+
+        self.historyScroll = Scrollbar(self.historyBox,command=self.history.yview,width=16)
+        self.history.config(yscrollcommand=self.historyScroll.set)
+        
+        self.historyScroll.pack(side=RIGHT,fill=Y)
+        self.history.pack(side=RIGHT,fill=BOTH,expand=True)
 
         self.replybox = RichTextBox(self.root,width=80,height=6)
         self.replybox.grid(row=1,column=0,sticky=N+S+W+E)
@@ -199,7 +210,7 @@ class message_list(object):
                                                 highlightbackground=self._normal_highlightcolor)
         self.needReceiptCheckbox.pack(side=TOP,fill=BOTH,expand=True)
         self.needReceipt.trace_variable('w',_onReceiptboxChecked)
-        self.needReceipt.set(1)
+        self.needReceipt.set(0)
 
         self.plainsend = Button(self.buttonframe,
                                 text=u'明文发送',

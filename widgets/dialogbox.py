@@ -90,7 +90,6 @@ class DialogBox(Text):
         except Exception,e:
             pass
         
-        self.yview(END)
         self.config(state=DISABLED)
         return recordid
 
