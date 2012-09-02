@@ -32,6 +32,24 @@ class DialogBox(Text):
 
         self.config(state=DISABLED)
 
+    def _stripText(self,text):
+        text = text.rstrip()
+        rowoffset = 0
+        coloffset = 0
+        while text:
+            c = text[0]
+            if c in ' \n':
+                text = text[1:]
+                if c in '\n':
+                    rowoffset += 1
+                    coloffset = 0
+                if c in ' ':
+                    coloffset += 1
+            else:
+                break
+        return (text,rowoffset,coloffset)
+
+
     def newRecord(self,headline,text,is_ours):
         self.config(state=NORMAL)
         recordid = hashlib.md5(headline + text).hexdigest()
@@ -47,12 +65,21 @@ class DialogBox(Text):
         # Insert Text
         revealEND = self.index(END)
         offset = int(revealEND.split('.')[0])
-        def r(x,s=offset):
-            return "%d.%d" % (x[0]+s-2,x[1])
         j = bson.loads(text)
         plaintext = zlib.decompress(j['t'])
+        stripped = self._stripText(plaintext)
+
+        def r(x,s=offset,r=stripped[1],c=stripped[2]):
+            nr = x[0] - r
+            print x[0],r
+            if nr == 1:
+                nc = x[1] - c
+            else:
+                nc = x[1]
+            return "%d.%d" % (s + nr - 2,nc)
+
         decorations = j['d']
-        self.insert(END,plaintext,recordid)
+        self.insert(END,stripped[0] + '\n',recordid)
         for tagname,indexlist in decorations.items():
             while indexlist:
                 if len(indexlist) >= 2:

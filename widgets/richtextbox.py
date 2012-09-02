@@ -78,15 +78,14 @@ class RichTextBox(Frame):
             ret = not ret
         return ret
 
-    def text(self):
-        plaintext = unicode(self.textbox.get(1.0,END).rstrip()).encode('utf-8')
-
+    def _stripText(self,text):
+        text = text.rstrip()
         rowoffset = 0
         coloffset = 0
-        while plaintext:
-            c = plaintext[0]
+        while text:
+            c = text[0]
             if c in ' \n':
-                plaintext = plaintext[1:]
+                text = text[1:]
                 if c in '\n':
                     rowoffset += 1
                     coloffset = 0
@@ -94,7 +93,12 @@ class RichTextBox(Frame):
                     coloffset += 1
             else:
                 break
+        return (text,rowoffset,coloffset)
 
+    def text(self):
+        stripped = self._stripText(self.textbox.get(1.0,END))
+        #stripped = (self.textbox.get(1.0,END),0,0) # Test only
+        plaintext = unicode(stripped[0]).encode('utf-8')
         plaintext = zlib.compress(plaintext,9)
 
         decorations = {}
@@ -104,20 +108,27 @@ class RichTextBox(Frame):
             ranges = self.textbox.tag_ranges("tag%d" % int(decid))
             for textindex in ranges:
                 tib,tie = textindex.string.split('.')
-                tib,tie = int(tib)-rowoffset,int(tie)
+                tib,tie = int(tib)-stripped[1],int(tie)
                 if tib == 1:
-                    tie -= coloffset
+                    tie -= stripped[2]
                 decorations[decid].append((tib,tie))
         return bson.dumps({'t':plaintext,'d':decorations})
 
     def load(self,inp):
-        def r(x):
-            return "%d.%d" % (x[0],x[1])
         self.textbox.delete(1.0,END)
         j = bson.loads(inp)
         plaintext = zlib.decompress(j['t'])
+
+        stripped = self._stripText(plaintext)
+        def r(x,r=stripped[1],c=stripped[2]):
+            nr = x[0] - r
+            if nr == 1:
+                return "%d.%d" % (nr,x[1]-c)
+            else:
+                return "%d.%d" % (nr,x[1])
+
         decorations = j['d']
-        self.textbox.insert(END,plaintext)
+        self.textbox.insert(END,stripped[0])
         for tagname,indexlist in decorations.items():
             while indexlist:
                 if len(indexlist) >= 2:
