@@ -125,29 +125,37 @@ class message_list(object):
         self.history = DialogBox(self.root)
         self.history.grid(row=0,column=0,columnspan=2,sticky=N+S+W+E)
 
-        self.replybox = RichTextBox(self.root,width=80,height=5)
-        self.replybox.grid(row=1,column=0)
+        self.replybox = RichTextBox(self.root,width=80,height=6)
+        self.replybox.grid(row=1,column=0,sticky=N+S+W+E)
 
         self.buttonframe = Frame(self.root,background='Red')
-        self.buttonframe.grid(row=1,column=1,sticky=N+S+W+E)
+        self.buttonframe.grid(row=1,column=1,sticky=N+S+W+E,padx=2,pady=2)
 
         self.needReceipt = IntVar()
         self.needReceiptCheckbox = Checkbutton(self.buttonframe,
-                                               text="选项：请求对方发送回执",
                                                padx=15,
                                                pady=10,
+                                               width=15,
+                                               highlightthickness=2,
                                                variable=self.needReceipt,
                                                indicatoron=False,
                                                font=FONT)
-#        self.needReceiptCheckbox.grid(row=0,column=0,sticky=N+S+E+W)
+        self._normal_highlightcolor = self.needReceiptCheckbox['highlightbackground']
+        def _onReceiptboxChecked(v1=None,mode=None,events=None):
+            if self.needReceipt.get():
+                self.needReceiptCheckbox.config(text='当前设定：请求回执',highlightbackground='#F00')
+            else:
+                self.needReceiptCheckbox.config(text='当前设定：不需回执',highlightbackground=self._normal_highlightcolor)
         self.needReceiptCheckbox.pack(side=TOP,fill=BOTH,expand=True)
+        self.needReceipt.trace_variable('w',_onReceiptboxChecked)
+        self.needReceipt.set(1)
 
         self.plainsend = Button(self.buttonframe,
                                 text=u'明文发送',
                                 padx=15,
                                 pady=10,
+                                highlightthickness=2,
                                 font=FONT)
-#        self.plainsend.grid(row=1,column=0,sticky=N+S+E+W)
         self.plainsend.pack(side=TOP,fill=BOTH,expand=True)
         self.plainsend['command'] = self.send_plain
 
@@ -155,9 +163,9 @@ class message_list(object):
                                 text=u'加密发送',
                                 padx=15,
                                 pady=10,
+                                highlightthickness=2,
                                 bg='#FFC800',
                                 font=FONT)
-#        self.cryptsend.grid(row=2,column=0,sticky=N+S+E+W)
         self.cryptsend.pack(side=TOP,fill=BOTH,expand=True)
         self.cryptsend['command'] = self.send_crypt
         if not xisupport.XI_ENABLED:
