@@ -88,7 +88,7 @@ def handle_kernel(sender,receiver,tag,message,isxi):
 def notify():
     global BASEPATH
     count = 0
-    db = shelve.open(os.path.join(BASEPATH,'configs','msgdb.db'))
+    db = shelve.open(os.path.join(BASEPATH,'cache','msgdb.db'))
     for key in db:
         count += len(db[key])
     if count>0:
