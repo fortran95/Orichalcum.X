@@ -79,7 +79,24 @@ class RichTextBox(Frame):
         return ret
 
     def text(self):
-        plaintext = zlib.compress(unicode(self.textbox.get(1.0,END)).encode('utf-8'),9)
+        plaintext = unicode(self.textbox.get(1.0,END).rstrip()).encode('utf-8')
+
+        rowoffset = 0
+        coloffset = 0
+        while plaintext:
+            c = plaintext[0]
+            if c in ' \n':
+                plaintext = plaintext[1:]
+                if c in '\n':
+                    rowoffset += 1
+                    coloffset = 0
+                if c in ' ':
+                    coloffset += 1
+            else:
+                break
+
+        plaintext = zlib.compress(plaintext,9)
+
         decorations = {}
         for each in self.tagconfigs:
             decid = str(self.tagconfigs.index(each))
@@ -87,7 +104,10 @@ class RichTextBox(Frame):
             ranges = self.textbox.tag_ranges("tag%d" % int(decid))
             for textindex in ranges:
                 tib,tie = textindex.string.split('.')
-                decorations[decid].append((int(tib),int(tie)))
+                tib,tie = int(tib)-rowoffset,int(tie)
+                if tib == 1:
+                    tie -= coloffset
+                decorations[decid].append((tib,tie))
         return bson.dumps({'t':plaintext,'d':decorations})
 
     def load(self,inp):
@@ -116,11 +136,11 @@ def rich2plain(inp):
 
 if __name__ == '__main__':
     root = Tk()
-    a = RichTextBox(root)
+    a = RichTextBox(root,height=5)
     a.grid(row=0,column=0)
     b = Button(root,text='generate')
     b.grid(row=1,column=0)
-    c = RichTextBox(root)
+    c = RichTextBox(root,height=5)
     c.grid(row=2,column=0)
     def cmd(x=a,y=c):
         text = x.text()
