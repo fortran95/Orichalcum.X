@@ -52,7 +52,7 @@ class DialogBox(Text):
 
     def newRecord(self,headline,text,is_ours):
         self.config(state=NORMAL)
-        recordid = hashlib.md5(headline + text).hexdigest()
+        recordid = hashlib.md5(str(headline) + str(text)).hexdigest()
 
         # Insert Headline
         self.insert(END,'\n')
@@ -62,34 +62,38 @@ class DialogBox(Text):
         else:
             self.insert(END,headline,('style.head.buddy',recordid))
 
-        # Insert Text
-        revealEND = self.index(END)
-        offset = int(revealEND.split('.')[0])
-        j = bson.loads(text)
-        plaintext = zlib.decompress(j['t'])
-        stripped = self._stripText(plaintext)
+        try:
+            if type(text) != str:
+                raise Exception()
+            # Insert Text
+            revealEND = self.index(END)
+            offset = int(revealEND.split('.')[0])
+            j = bson.loads(text)
+            plaintext = zlib.decompress(j['t'])
+            stripped = self._stripText(plaintext)
 
-        def r(x,s=offset,r=stripped[1],c=stripped[2]):
-            nr = x[0] - r
-            if nr == 1:
-                nc = x[1] - c
-            else:
-                nc = x[1]
-            return "%d.%d" % (s + nr - 2,nc)
-
-        decorations = j['d']
-        self.insert(END,stripped[0] + '\n',recordid)
-        for tagname,indexlist in decorations.items():
-            while indexlist:
-                if len(indexlist) >= 2:
-                    cstart,cend = [r(t) for t in indexlist[0:2]]
-                    indexlist = indexlist[2:]
+            def r(x,s=offset,r=stripped[1],c=stripped[2]):
+                nr = x[0] - r
+                if nr == 1:
+                    nc = x[1] - c
                 else:
-                    cstart = r(indexlist[0])
-                    cend = END
-                    indexlist = []
-                self.tag_add("tag%d" % int(tagname),cstart,cend)
+                    nc = x[1]
+                return "%d.%d" % (s + nr - 2,nc)
 
+            decorations = j['d']
+            self.insert(END,stripped[0] + '\n',recordid)
+            for tagname,indexlist in decorations.items():
+                while indexlist:
+                    if len(indexlist) >= 2:
+                        cstart,cend = [r(t) for t in indexlist[0:2]]
+                        indexlist = indexlist[2:]
+                    else:
+                        cstart = r(indexlist[0])
+                        cend = END
+                        indexlist = []
+                    self.tag_add("tag%d" % int(tagname),cstart,cend)
+        except Exception,e:
+            pass
         
         self.yview(END)
         self.config(state=DISABLED)

@@ -27,7 +27,9 @@ class message_list(object):
         self.root = Tk()
         self.root.title(u'和 %s 对话中' % buddyname)
         self.buddyname = buddyname
-        self.recordfile = os.path.join(BASEPATH,'cache',self.buddyname.encode('hex') + '.cache')
+        self.recordfile = os.path.join(BASEPATH,
+                                       'cache',
+                                       self.buddyname.encode('hex') + '.cache')
         self.createWidgets()
         self.bindEvents()
         
@@ -72,33 +74,47 @@ class message_list(object):
         
         self.root.after(100,self.readMessages)
     
-    def _timestr(self,timestamp):
+    def _timestr(self,timestamp=None):
+        if timestamp == None:
+            timestamp = time.time()
         return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(timestamp))
 
     def handle_received_message(self,isOurs,**argv):
-        b = bson.loads(argv['message'])
-        if b['t'] == 1:
-            self.append_message(isOurs,
-                                message=b['d'],
-                                timestamp=argv['timestamp'],
-                                xi=argv['xi'])
-        if b['t'] == 2:
-            recid = b['d'].strip().lower()
-            if recid in self.unhandled_receipts:
-                self.history.paintRecord(recid,self.history['background'])
-            self.unhandled_receipts.remove(recid)
+        try:
+            b = bson.loads(argv['message'])
+            if b['t'] == 1:
+#                raise Exception('')
+                self.append_message(isOurs,
+                                    message=b['d'],
+                                    timestamp=argv['timestamp'],
+                                    xi=argv['xi'])
+            if b['t'] == 2:
+                recid = b['d'].strip().lower()
+                if recid in self.unhandled_receipts:
+                    self.history.paintRecord(recid,self.history['background'])
+                self.unhandled_receipts.remove(recid)
+        except Exception,e:
+            if not isOurs:
+                self.history.newRecord(':: 收到一条错误消息 :: 长度%d字节 (%s)'
+                                            %(len(argv['message']),
+                                              self._timestr()),
+                                       None,
+                                       False)
 
     def append_message(self,isOurs,**each):
+        #if not isOurs: raise Exception('') # Test only
         if isOurs:
             showname = '%s(我)' % utils.myname
         else:
             showname = self.buddyname
         headline = '%s %s:' % (showname,self._timestr(each['timestamp']))
 
-        recordid = self.history.newRecord(headline,each['message'],isOurs)
-
-        if isOurs == False and each.has_key('xi') and each['xi']:
-            self.history.paintRecord(recordid,'#FFC800')
+        if type(each['message']) == str:
+            recordid = self.history.newRecord(headline,each['message'],isOurs)
+            if isOurs == False and each.has_key('xi') and each['xi'] == True:
+                self.history.paintRecord(recordid,'#FFC800')
+        else:
+            raise Exception('')
         
         return recordid
 
@@ -135,7 +151,10 @@ class message_list(object):
         self._send_core(message,1,crypt)
 
         # Add to history
-        recordid = self.append_message(True,message=message,timestamp=time.time()).strip().lower()
+        recordid = self.append_message(True,
+                                       message=message,
+                                       timestamp=time.time()
+                                      ).strip().lower()
         if self.needReceipt.get():
             self.unhandled_receipts.append(recordid)
             self.history.paintRecord(recordid,self.UNHANDLED_RECEIPT_COLOR)
@@ -174,9 +193,11 @@ class message_list(object):
         self._normal_highlightcolor = self.needReceiptCheckbox['highlightbackground']
         def _onReceiptboxChecked(v1=None,mode=None,events=None):
             if self.needReceipt.get():
-                self.needReceiptCheckbox.config(text='当前设定：请求回执',highlightbackground='#F00')
+                self.needReceiptCheckbox.config(text='当前设定：请求回执',
+                                                highlightbackground='#F00')
             else:
-                self.needReceiptCheckbox.config(text='当前设定：不需回执',highlightbackground=self._normal_highlightcolor)
+                self.needReceiptCheckbox.config(text='当前设定：不需回执',
+                                                highlightbackground=self._normal_highlightcolor)
         self.needReceiptCheckbox.pack(side=TOP,fill=BOTH,expand=True)
         self.needReceipt.trace_variable('w',_onReceiptboxChecked)
         self.needReceipt.set(1)
