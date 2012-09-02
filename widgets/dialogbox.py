@@ -71,7 +71,6 @@ class DialogBox(Text):
 
         def r(x,s=offset,r=stripped[1],c=stripped[2]):
             nr = x[0] - r
-            print x[0],r
             if nr == 1:
                 nc = x[1] - c
             else:

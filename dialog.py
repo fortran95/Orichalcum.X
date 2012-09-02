@@ -86,6 +86,7 @@ class message_list(object):
     def quit(self):
         global BASEPATH
         # Kill the dialog
+        self.root.withdraw()
         self.root.destroy()
     def _do_send(self,message,crypt=True):
         global BASEPATH
@@ -125,14 +126,39 @@ class message_list(object):
         self.history.grid(row=0,column=0,columnspan=2,sticky=N+S+W+E)
 
         self.replybox = RichTextBox(self.root,width=80,height=5)
-        self.replybox.grid(row=1,column=0,rowspan=2)
+        self.replybox.grid(row=1,column=0)
 
-        self.plainsend = Button(self.root,text=u'明文发送',width=20,font=FONT)
-        self.plainsend.grid(row=1,column=1,sticky=N+S+E+W)
+        self.buttonframe = Frame(self.root,background='Red')
+        self.buttonframe.grid(row=1,column=1,sticky=N+S+W+E)
+
+        self.needReceipt = IntVar()
+        self.needReceiptCheckbox = Checkbutton(self.buttonframe,
+                                               text="选项：请求对方发送回执",
+                                               padx=15,
+                                               pady=10,
+                                               variable=self.needReceipt,
+                                               indicatoron=False,
+                                               font=FONT)
+#        self.needReceiptCheckbox.grid(row=0,column=0,sticky=N+S+E+W)
+        self.needReceiptCheckbox.pack(side=TOP,fill=BOTH,expand=True)
+
+        self.plainsend = Button(self.buttonframe,
+                                text=u'明文发送',
+                                padx=15,
+                                pady=10,
+                                font=FONT)
+#        self.plainsend.grid(row=1,column=0,sticky=N+S+E+W)
+        self.plainsend.pack(side=TOP,fill=BOTH,expand=True)
         self.plainsend['command'] = self.send_plain
 
-        self.cryptsend = Button(self.root,text=u'加密发送',bg='#FFC800',font=FONT)
-        self.cryptsend.grid(row=2,column=1,sticky=N+S+E+W)
+        self.cryptsend = Button(self.buttonframe,
+                                text=u'加密发送',
+                                padx=15,
+                                pady=10,
+                                bg='#FFC800',
+                                font=FONT)
+#        self.cryptsend.grid(row=2,column=0,sticky=N+S+E+W)
+        self.cryptsend.pack(side=TOP,fill=BOTH,expand=True)
         self.cryptsend['command'] = self.send_crypt
         if not xisupport.XI_ENABLED:
             self.cryptsend['state'] = DISABLED

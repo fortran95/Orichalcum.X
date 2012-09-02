@@ -38,9 +38,9 @@ class RichTextBox(Frame):
                 except:
                     pass
             self.editorbar.buttons[-1]['command'] = _barbtn_action
-            self.editorbar.buttons[-1].pack(side=LEFT,anchor=W)
+            self.editorbar.buttons[-1].pack(side=LEFT,anchor=W,fill=BOTH)
 
-        self.editorbar.grid(column=0,columnspan=2,row=0)
+        self.editorbar.grid(column=0,columnspan=2,row=0,sticky=N+S+W+E)
         self.textbox.grid(row=1,column=0)
 
     def enable(self):
