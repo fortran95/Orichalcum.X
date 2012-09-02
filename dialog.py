@@ -142,9 +142,8 @@ class message_list(object):
     def _do_send(self,message,crypt=True):
         global BASEPATH
 
-        plainmessage = rich2plain(message).strip()
-        if plainmessage == '':
-            self.replybox.clear()
+        msglen = len(rich2plain(message).strip())
+        if msglen <= 0 or msglen > utils.MAX_MESSAGE_LENGTH:
             self.replybox.flash(2)
             return
 

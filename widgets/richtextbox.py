@@ -34,6 +34,10 @@ class RichTextBox(Frame):
             self.editorbar.buttons[-1]['command'] = _barbtn_action
             self.editorbar.buttons[-1].pack(side=LEFT,anchor=W,fill=BOTH)
 
+        self.scrollbar = Scrollbar(self, command=self.textbox.yview, width=16)
+        self.textbox.config(yscrollcommand=self.scrollbar.set)
+
+        self.scrollbar.grid(row=1,column=1,sticky=N+S+W+E)
         self.editorbar.grid(column=0,columnspan=2,row=0,sticky=N+S+W+E)
         self.textbox.grid(row=1,column=0)
 

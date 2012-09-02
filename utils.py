@@ -1,5 +1,7 @@
 import os,sys,shelve,ConfigParser
 
+MAX_MESSAGE_LENGTH = 1024 # Changing this limit should be cautious
+
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
 usercfg = ConfigParser.ConfigParser()
