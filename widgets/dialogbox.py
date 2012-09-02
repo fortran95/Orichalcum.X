@@ -8,24 +8,19 @@ import zlib
 
 import bson
 
-FONT = ('sans',11)
+import _utils
+
 class DialogBox(Text):
 
-    tagconfigs = [('B',   {'font':FONT + ('bold',)}),
-                  ('H',   {'font':FONT + ('bold italic',)}),
-                  ('H',   {'font':FONT + ('italic',)}),
-                  ('_',   {'underline':True}),
-                  ('红',  {'foreground':'#F00'}),
-                  ('蓝',  {'foreground':'#00B'}),
-                  ('绿',  {'foreground':'#070'}),
-                 ]
+    tagconfigs = _utils.TAGCONFIGS
+    font = _utils.FONT
 
     def __init__(self,master,**options):
         Text.__init__(self,master,**options)
-        self.config(padx=7,pady=5,font=FONT)
+        self.config(padx=7,pady=5,font=self.font)
 
-        self.tag_config('style.head.local',foreground='#00A',font=FONT+('bold',))
-        self.tag_config('style.head.buddy',foreground='#A00',font=FONT+('bold',))
+        self.tag_config('style.head.local',foreground='#00A',font=self.font+('bold',))
+        self.tag_config('style.head.buddy',foreground='#A00',font=self.font+('bold',))
 
         for each in self.tagconfigs:
             self.tag_config("tag%d" % self.tagconfigs.index(each),each[1])

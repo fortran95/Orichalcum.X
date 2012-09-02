@@ -2,8 +2,6 @@
 import notifier,shelve,base64,sys,os,time,hashlib,json
 import plugins,xisupport,msgpack,utils,entity
 
-from widgets.richtextbox import rich2plain
-
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
 def parse(message,moretags,sender):
@@ -77,9 +75,9 @@ def handle_kernel(sender,receiver,tag,message,isxi):
 
         if do_notify:
             if isxi:
-                notifier.gnotify(u'来自 %s 的机密消息' % sender, rich2plain(message))
+                notifier.gnotify(u'来自 %s 的机密消息' % sender, '<a href="http://tieba.baidu.com">baidu.com</a>')
             else:
-                notifier.gnotify(u'来自 %s 的普通消息' % sender, rich2plain(message))
+                notifier.gnotify(u'来自 %s 的普通消息' % sender, '<a href="http://github.com">github.com</a>')
     except Exception,e:
         print "Error saving message: %s" % e
     # Remove database lock

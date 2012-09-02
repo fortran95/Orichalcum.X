@@ -6,18 +6,12 @@ from Tkinter import *
 
 import bson
 
-FONT = ('sans',11)
+import _utils
 
 class RichTextBox(Frame):
     
-    tagconfigs = [('B',   {'font':FONT + ('bold',)}),
-                  ('H',   {'font':FONT + ('bold italic',)}),
-                  ('H',   {'font':FONT + ('italic',)}),
-                  ('_',   {'underline':True}),
-                  ('红',  {'foreground':'#F00'}),
-                  ('蓝',  {'foreground':'#00B'}),
-                  ('绿',  {'foreground':'#070'}),
-                 ]
+    tagconfigs = _utils.TAGCONFIGS
+    font = _utils.FONT
     
     def __init__(self,root,**argv):
         Frame.__init__(self,root)
@@ -25,7 +19,7 @@ class RichTextBox(Frame):
 
     def _createWidgets(self,**argv):
         self.editorbar = Frame(self)
-        self.textbox = Text(self,font=FONT,**argv)
+        self.textbox = Text(self,font=self.font,**argv)
         self.textbox.config(foreground='#000',background='#FFF')
         self.editorbar.buttons = []
 
