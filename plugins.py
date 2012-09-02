@@ -1,5 +1,5 @@
 """
-{'message': u'a2\n', 'tag': u'akasha', 'more': {u'timestamp': u'1344568248', u'account': u'admin', 'sender': 'li.....ai'}}
+{'timestamp': 1346572318.0377929, 'message': '', 'tag': u'tagged', 'more': {u'timestamp': 1346572318.0377929, u'tag': u'tagged'}}
 """
 
 handlers = {}
