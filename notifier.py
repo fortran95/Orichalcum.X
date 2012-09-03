@@ -3,17 +3,21 @@ from Tkinter import *
 import pynotify
 import time,subprocess,os,sys
 
-BASEPATH = os.path.dirname(sys.argv[0])
-if BASEPATH != '':
-    BASEPATH += '/'
+BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
-def osd(message,desc=None):
+def osd(message,desc=None,level=0):
     global BASEPATH
-    ns = subprocess.Popen(['mpg123','-q',BASEPATH + 'alarms/notify.mp3'])
+
+    if level in range(0,5):
+        notifile = ['notify.mp3','caution.mp3','warning.mp3','alarm.mp3','danger.mp3'][level]
+    else:
+        return
+
+    ns = subprocess.Popen(['mpg123','-q',os.path.join(BASEPATH,'alarms',notifile)])
     for i in range(0,3):
         osd_write(message,450.0)
     if desc != None:
-        ns = subprocess.Popen(['mpg123','-q',BASEPATH + 'alarms/notify.mp3'])
+        ns = subprocess.Popen(['mpg123','-q',os.path.join(BASEPATH,'alarms','notify.mp3')])
         for key in desc:
             osd_write(key,1500.0)
     
@@ -24,7 +28,7 @@ def osd_write(message,timed=450.0):
     time.sleep((timed + 150) / 1000)
 def gnotify(message,desc):
     global BASEPATH
-    ns = subprocess.Popen(['mpg123','-q',BASEPATH + 'alarms/caution.mp3'])
+    ns = subprocess.Popen(['mpg123','-q',os.path.join(BASEPATH,'alarms','caution.mp3')])
     pynotify.init("Orichalcum")
     n = pynotify.Notification(message,desc)
     n.set_urgency(pynotify.URGENCY_NORMAL)
@@ -42,9 +46,11 @@ def showMessage(sender,message):
     root.mainloop()
     
 if __name__ == '__main__':
-    #osd('未读消息：3条')
-    #osd('地震速报',['2008年5月12日 午后2时28分','四川省汶川县发生7.8级地震'])
+#    osd('未读消息：3条')
+    osd('地震速报',['2008年5月12日 午后2时28分','四川省汶川县发生7.8级地震'],2)
+    """
     def callback():
         print "Clicked!"
     gnotify("New message","content",callback)
     showMessage('a','b')
+    """

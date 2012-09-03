@@ -12,10 +12,10 @@
 handlers = {}
 
 try:
-    import akasha
-    handlers['akasha'] = (akasha.handler,{'keep-record':False})
+    import alarming
+    handlers['alarming'] = (alarming.handler,{})
 except:
-    print "Warning: Akasha cannot be loaded."
+    print "Warning: Alarming Plugin cannot be loaded."
 
 def plugin_do(message):
     global handlers
@@ -23,7 +23,7 @@ def plugin_do(message):
     tag = message['info']['tag']
 
     if handlers.has_key(tag):
-        handlers[tag][0](message,handlers[tag][1])
+        handlers[tag][0](message,**handlers[tag][1])
         return True
     else:
         return False
