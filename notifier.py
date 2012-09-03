@@ -35,15 +35,6 @@ def gnotify(message,desc):
     n.set_timeout(15)
     n.show()
     time.sleep(1)
-def showMessage(sender,message):
-    root = Tk()
-    
-    txt = Text(root,width=40,height=10)
-    txt.insert(END,message)
-    txt.grid(row=0,column=0)
-    
-    root.title("来自 %s 的消息" % sender)
-    root.mainloop()
     
 if __name__ == '__main__':
 #    osd('未读消息：3条')
