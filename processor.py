@@ -33,19 +33,22 @@ def handle_kernel(sender,receiver,tag,message):
         tag = json.loads(tag.decode('hex'))
         tag['hash'] = hashlib.sha1(str(message)
                                    +str(tag['timestamp'])
+                                   +str(tag['tag'])
                                   ).hexdigest()
         reconstructed = {'sender':sender,
                          'receiver':receiver,
                          'message':message,
                          'info':tag}
 
-        if reconstructed['info']['tag'] != 'im':
+        # TODO filter duplicate messages
+
+        # Call plugins
+        if not reconstructed['info']['tag'] in ('im','im_receipt'):
             # Call related programs here !
             plugins.plugin_do(reconstructed)
             return True
-        # Store message
-        #notifier.showMessage(message['sender'],message['message'])
 
+        # Store message for dialogs
         while True:
             if os.path.isfile(MSGDB_PATH0 + 'lock'):
                 print 'Orichalcum processor: Message database locked, waiting.'

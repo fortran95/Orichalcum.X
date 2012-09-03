@@ -82,15 +82,14 @@ class message_list(object):
 
     def handle_received_message(self,isOurs,**argv):
         try:
-            b = bson.loads(argv['message'])
-            if b['t'] == 1:
+            if argv['info']['tag'] == 'im':
 #                raise Exception('')
                 self.append_message(isOurs,
-                                    message=b['d'],
+                                    message=argv['message'],
                                     timestamp=argv['info']['timestamp'],
                                     xi=argv['info']['xi'])
-            if b['t'] == 2:
-                recid = b['d'].strip().lower()
+            if argv['info']['tag'] == 'im_receipt':
+                recid = argv['message'].strip().lower()
                 if recid in self.unhandled_receipts:
                     self.history.paintRecord(recid,self.history['background'])
                 self.unhandled_receipts.remove(recid)
@@ -128,14 +127,18 @@ class message_list(object):
         self.root.withdraw()
         self.root.destroy()
     def _send_core(self,data,tag,crypt):
-        message = bson.dumps({'d':data,'t':tag})
         cache = os.path.join(BASEPATH,
                              'cache',
-                             hashlib.md5(message + str(random.random())).hexdigest())
-        open(cache,'w').write(message)
+                             hashlib.md5(str(data)
+                                         +str(random.random())
+                                        ).hexdigest()
+                            )
+        open(cache,'w').write(data)
         try:
-            cmd = "python %s -r %s -i %s" % (os.path.join(BASEPATH,'send.py'),
-                                             self.buddyname,cache)
+            cmd = "python %s -r %s -i %s -t %s" % (os.path.join(BASEPATH,'send.py'),
+                                                   self.buddyname,
+                                                   cache,
+                                                   tag)
             if crypt:
                 cmd += ' -x'
             os.system(cmd)
@@ -151,7 +154,7 @@ class message_list(object):
             self.replybox.flash(2)
             return
 
-        self._send_core(message,1,crypt)
+        self._send_core(message,'im',crypt)
 
         # Add to history
         recordid = self.append_message(True,
@@ -161,7 +164,7 @@ class message_list(object):
         if self.needReceipt.get():
             self.unhandled_receipts.append(recordid)
             self.history.paintRecord(recordid,self.UNHANDLED_RECEIPT_COLOR)
-            self._send_core(recordid,2,False)
+            self._send_core(recordid,'im_receipt',False)
 
         # clear input box
         self.replybox.clear()
