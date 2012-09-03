@@ -8,6 +8,7 @@ import utils
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 entitycache  = os.path.join(BASEPATH,'cache','entity.cache')
 entityconfig = os.path.join(BASEPATH,'configs','alias.cfg')
+entitypy = os.path.join(BASEPATH,'entity.py')
 
 if os.path.isfile(entitycache):
     cachetime = os.path.getmtime(entitycache)
@@ -15,7 +16,7 @@ else:
     cachetime = 0
 
 if cachetime <= max(os.path.getmtime(entityconfig),
-                    os.path.getmtime(os.path.realpath(sys.argv[0]))):
+                    os.path.getmtime(entitypy)):
     print 'Generating entity cache.'
 
     sh = shelve.open(entitycache,writeback=True)

@@ -2,8 +2,6 @@
 from Tkinter import *
 import shelve,os,sys,copy,base64,time,tkMessageBox,threading,tkFileDialog,random,hashlib
 
-import bson
-
 from widgets.richtextbox import RichTextBox,rich2plain
 from widgets.dialogbox import DialogBox
 import utils

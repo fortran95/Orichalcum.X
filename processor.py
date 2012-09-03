@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import notifier,shelve,base64,sys,os,time,hashlib,json
+
 import plugins,xisupport,msgpack,utils,entity
+from widgets.richtextbox import rich2plain
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
@@ -26,6 +28,26 @@ def handle(message,sender):
     except Exception,e:
         print "Error handling message: %s" % e
 
+def is_duplicate(h,timeoffset=300):
+    global BASEPATH
+    nowtime = time.time()
+    dbname = os.path.join(BASEPATH,'cache','hashfilter.db')
+    h = h.strip().lower()
+    sh = shelve.open(dbname,writeback=True)
+
+    delkeys = []
+    for k in sh:
+        if nowtime - sh[k] >= timeoffset:
+            delkeys.append(k)
+    for delkey in delkeys:
+        del sh[delkey]
+
+    if sh.has_key(h):
+        return True
+    else:
+        sh[h] = time.time()
+        return False
+
 def handle_kernel(sender,receiver,tag,message):
     global BASEPATH
     MSGDB_PATH0 = os.path.join(BASEPATH,'cache','msgdb.')
@@ -40,7 +62,9 @@ def handle_kernel(sender,receiver,tag,message):
                          'message':message,
                          'info':tag}
 
-        # TODO filter duplicate messages
+        # filter duplicate messages
+        if is_duplicate(tag['hash']):
+            return True
 
         # Call plugins
         if not reconstructed['info']['tag'] in ('im','im_receipt'):
@@ -62,21 +86,19 @@ def handle_kernel(sender,receiver,tag,message):
         newhash = reconstructed['info']['hash']
         newkey = reconstructed['sender'].strip().encode('hex')
 
-        do_notify = False
-        if db.has_key(newkey) == False:
-            do_notify = True
+        if not db.has_key(newkey):
             db[newkey] = {newhash:reconstructed}
         else:
-            if not db[newkey].has_key(newhash):
-                do_notify = True
-                db[newkey][newhash] = reconstructed
+            db[newkey][newhash] = reconstructed
+
         db.close()
 
-        if do_notify:
+        if reconstructed['info']['tag'] == 'im':
+            quickview = rich2plain(reconstructed['message'])
             if reconstructed['info']['xi']:
-                notifier.gnotify(u'来自 %s 的机密消息' % sender, '<a href="http://tieba.baidu.com">baidu.com</a>')
+                notifier.gnotify(u'来自 %s 的机密消息' % sender, quickview)
             else:
-                notifier.gnotify(u'来自 %s 的普通消息' % sender, '<a href="http://github.com">github.com</a>')
+                notifier.gnotify(u'来自 %s 的普通消息' % sender, quickview)
     except Exception,e:
         print "Error saving message: %s" % e
     # Remove database lock
