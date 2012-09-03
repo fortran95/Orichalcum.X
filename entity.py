@@ -14,7 +14,6 @@ if os.path.isfile(entitycache):
     cachetime = os.path.getmtime(entitycache)
 else:
     cachetime = 0
-
 if cachetime <= max(os.path.getmtime(entityconfig),
                     os.path.getmtime(entitypy)):
     print 'Generating entity cache.'
@@ -34,13 +33,28 @@ if cachetime <= max(os.path.getmtime(entityconfig),
             elif x == 'allow_special':
                 specials = [t.strip().lower() for t in y.split(',')]
                 for special in specials:
-                    if not special in ('alert','warning'):
-                        continue
                     if special.startswith('*'):
-                        sh[nickname]['special'][special[1:]] = True
+                        special = special[1:]
+                        appendvalue = 0
                     else:
-                        sh[nickname]['special'][special] = False
+                        appendvalue = 1
+                    if special in utils.SPECIALS:
+                        sh[nickname]['special'][special] = appendvalue
     sh.close()
+
+def getSpecialAuthsByNickname(nickname):
+    global entitycache
+    sh = shelve.open(entitycache)
+    if sh.has_key(nickname):
+        specials =  sh[nickname]['special']
+        ret = []
+        for t in utils.SPECIALS:
+            if specials.has_key(t):
+                ret.append(int(specials[t]))
+            else:
+                ret.append(-1)
+        return ret
+    return False
 
 def getNicknameByJID(jid):
     global entitycache

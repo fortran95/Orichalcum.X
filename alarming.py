@@ -7,6 +7,7 @@ import sys
 import time
 import random
 import hashlib
+import entity
 
 import utils
 import notifier
@@ -137,12 +138,27 @@ def handler(msg,**argv):
         j = json.loads(msg['message'])
         r = {}
         r['title'] = j['title']
-        r['level'] = j['level']
+        r['level'] = int(j['level'])
         r['info'] = '报告人：%s  时间：%s' % (msg['sender'],
                                               time.strftime('%Y年%m月%d日 %H:%M:%S',
                                               time.gmtime(int(msg['info']['timestamp']))))
         r['body'] = j['body']
-        r['xi'] = msg['info']['xi']
+        r['xi'] = bool(msg['info']['xi'])
+
+        # Check Authorization
+        sender_entity = entity.getSpecialAuthsByNickname(msg['sender'])
+        if sender_entity == False:
+            print "alarm error: Unrecognized sender."
+            return
+        if r['level'] < 0 or r['level'] >= len(sender_entity):
+            print "alarm error: Illegal level(%d)." % r['level']
+            return
+        if sender_entity[r['level']] < 0:
+            print "alarm error: This level(%d) is not allowed." % r['level']
+            return
+        if sender_entity[r['level']] == 0 and r['xi'] != True:
+            print "alarm error: This level without encryption is not allowed."
+            return
 
         # put to file and raise another process
         cachefile = os.path.join(utils.BASEPATH,
