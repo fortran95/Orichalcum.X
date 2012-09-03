@@ -31,6 +31,9 @@ def handle_kernel(sender,receiver,tag,message):
     MSGDB_PATH0 = os.path.join(BASEPATH,'cache','msgdb.')
     try:
         tag = json.loads(tag.decode('hex'))
+        tag['hash'] = hashlib.sha1(str(message)
+                                   +str(tag['timestamp'])
+                                  ).hexdigest()
         reconstructed = {'sender':sender,
                          'receiver':receiver,
                          'message':message,
@@ -53,8 +56,7 @@ def handle_kernel(sender,receiver,tag,message):
                 break
 
         db = shelve.open(MSGDB_PATH0 + 'db' , writeback=True)
-        newhash = hashlib.md5(str(reconstructed['message'])
-                              +str(reconstructed['info']['timestamp'])).hexdigest()
+        newhash = reconstructed['info']['hash']
         newkey = reconstructed['sender'].strip().encode('hex')
 
         do_notify = False

@@ -1,5 +1,12 @@
 """
-{'timestamp': 1346572318.0377929, 'message': '', 'tag': u'tagged', 'more': {u'timestamp': 1346572318.0377929, u'tag': u'tagged'}}
+{'info': {u'timestamp': 1346612126.0684049,
+          u'xi': False,
+          u'tag': u'tagged',
+          'hash': '47cf6d60613e16e38db31eba35b85b4d63efd558'},
+ 'message': '',
+ 'sender': 'orxszlyzr',
+ 'receiver': 'orxszlyzr'
+}
 """
 
 handlers = {}
@@ -12,8 +19,8 @@ except:
 
 def plugin_do(message):
     global handlers
-    print message
-    tag = message['tag']
+#    print message
+    tag = message['info']['tag']
 
     if handlers.has_key(tag):
         handlers[tag][0](message,handlers[tag][1])
