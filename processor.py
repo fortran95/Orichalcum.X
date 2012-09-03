@@ -53,7 +53,8 @@ def handle_kernel(sender,receiver,tag,message):
     MSGDB_PATH0 = os.path.join(BASEPATH,'cache','msgdb.')
     try:
         tag = json.loads(tag.decode('hex'))
-        tag['hash'] = hashlib.sha1(str(message)
+        tag['hash'] = hashlib.sha1(str(sender)
+                                   +str(message)
                                    +str(tag['timestamp'])
                                    +str(tag['tag'])
                                   ).hexdigest()
@@ -106,6 +107,7 @@ def handle_kernel(sender,receiver,tag,message):
         os.remove(MSGDB_PATH0 + 'lock')
     return True
 
+"""
 def notify():
     global BASEPATH
     count = 0
@@ -114,3 +116,4 @@ def notify():
         count += len(db[key])
     if count>0:
         notifier.osd("您有 %d 条新消息" % count)
+"""

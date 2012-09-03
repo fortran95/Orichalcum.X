@@ -3,7 +3,7 @@
 # This is used to check and pull messages from given server.
 
 import ConfigParser, sys, os, StringIO, json, shelve, hashlib, hmac, time, tkMessageBox, threading
-import notifier,processor,entity,xmpp,utils
+import processor,entity,xmpp,utils
 from Tkinter import *
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
@@ -136,7 +136,6 @@ class daemon(threading.Thread):
         self.feedDog()
 
         # begin looping
-        last_message_notify = 0
         while not self.sig_terminate.isSet():
             # Job now.
             now = time.time()
@@ -177,11 +176,6 @@ class daemon(threading.Thread):
                         if jid in each[0].xmpp.client_roster.keys():
                             each[0].setMessage(jid,mission['message'])     
     
-            # Job #3: Raise Alarm if there is any new messages.
-            notify_timed = now - last_message_notify
-            if notify_timed > 60:
-                processor.notify()
-                last_message_notify = now
             # Do WatchDog
             self.watchDog()
             # Now All Job Done
