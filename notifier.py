@@ -36,12 +36,4 @@ def gnotify(message,desc):
     n.show()
     time.sleep(1)
     
-if __name__ == '__main__':
-#    osd('未读消息：3条')
-    osd('地震速报',['2008年5月12日 午后2时28分','四川省汶川县发生7.8级地震'],2)
-    """
-    def callback():
-        print "Clicked!"
-    gnotify("New message","content",callback)
-    showMessage('a','b')
-    """
+
