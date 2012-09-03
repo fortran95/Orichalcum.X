@@ -79,18 +79,21 @@ class message_list(object):
         return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(timestamp))
 
     def handle_received_message(self,isOurs,**argv):
+        print "Dialog: New message handling."
         try:
-            if argv['info']['tag'] == 'im':
-#                raise Exception('')
-                self.append_message(isOurs,
-                                    message=argv['message'],
-                                    timestamp=argv['info']['timestamp'],
-                                    xi=argv['info']['xi'])
             if argv['info']['tag'] == 'im_receipt':
                 recid = argv['message'].strip().lower()
                 if recid in self.unhandled_receipts:
                     self.history.paintRecord(recid,self.history['background'])
                 self.unhandled_receipts.remove(recid)
+            else:
+                recordid = argv['info']['tag'][3:]
+                if len(recordid) == 32:
+                    self._send_core(recordid,'im_receipt',False)   #IM receipt Response.
+                self.append_message(isOurs,
+                                    message=argv['message'],
+                                    timestamp=argv['info']['timestamp'],
+                                    xi=argv['info']['xi'])
         except Exception,e:
             if not isOurs:
                 self.history.newRecord(':: 收到一条错误消息 :: 长度%d字节 (%s)'
@@ -152,17 +155,15 @@ class message_list(object):
             self.replybox.flash(2)
             return
 
-        self._send_core(message,'im',crypt)
-
         # Add to history
         recordid = self.append_message(True,
                                        message=message,
                                        timestamp=time.time()
                                       ).strip().lower()
+        self._send_core(message,'im_%s' % recordid,crypt)
         if self.needReceipt.get():
             self.unhandled_receipts.append(recordid)
             self.history.paintRecord(recordid,self.UNHANDLED_RECEIPT_COLOR)
-            self._send_core(recordid,'im_receipt',False)
 
         # clear input box
         self.replybox.clear()

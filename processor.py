@@ -68,7 +68,7 @@ def handle_kernel(sender,receiver,tag,message):
             return True
 
         # Call plugins
-        if not reconstructed['info']['tag'] in ('im','im_receipt'):
+        if not reconstructed['info']['tag'].startswith('im_'):
             # Call related programs here !
             plugins.plugin_do(reconstructed)
             return True
