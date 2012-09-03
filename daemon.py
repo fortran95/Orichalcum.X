@@ -165,7 +165,7 @@ class daemon(threading.Thread):
                     continue
                 if not each[0].connect_status == 2:
                     continue
-                if each[0].xmpp.client_roster:
+                if each[0].xmpp.client_roster or True: # XXX This hack enables forcing each account to send.
                     mission = each[1].pop(0)
                     possible_jids = entity.getJIDsByNickname(mission['receiver'])
                     if possible_jids == False:
@@ -173,7 +173,7 @@ class daemon(threading.Thread):
                     for jid in possible_jids:
                         if utils.stripJID(jid) == utils.stripJID(each[0].jid):
                             continue
-                        if jid in each[0].xmpp.client_roster.keys():
+                        if jid in each[0].xmpp.client_roster.keys() or True: # The same with XXX
                             each[0].setMessage(jid,mission['message'])     
     
             # Do WatchDog
