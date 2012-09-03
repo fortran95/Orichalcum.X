@@ -60,7 +60,8 @@ class message_list(object):
                             del sh[wantedkey][k]
                     gotmessages = sh[wantedkey].values()
                     self.filter_hashes += sh[wantedkey].keys()
-                    self.message_queue += sorted(gotmessages,key=lambda x:x['timestamp'])
+                    self.message_queue += sorted(gotmessages,
+                                                 key=lambda x:x['info']['timestamp'])
                     del sh[wantedkey]
                     sh.close()
             except Exception,e:
@@ -86,8 +87,8 @@ class message_list(object):
 #                raise Exception('')
                 self.append_message(isOurs,
                                     message=b['d'],
-                                    timestamp=argv['timestamp'],
-                                    xi=argv['xi'])
+                                    timestamp=argv['info']['timestamp'],
+                                    xi=argv['info']['xi'])
             if b['t'] == 2:
                 recid = b['d'].strip().lower()
                 if recid in self.unhandled_receipts:

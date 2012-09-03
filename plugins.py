@@ -12,6 +12,7 @@ except:
 
 def plugin_do(message):
     global handlers
+    print message
     tag = message['tag']
 
     if handlers.has_key(tag):

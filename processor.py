@@ -4,16 +4,6 @@ import plugins,xisupport,msgpack,utils,entity
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
-def parse(message,moretags,sender):
-    # If this is a marked message(with tags. only tag='im' will be shown, others will be transfered to related programs.
-    tag=''
-    try:
-        moretags = json.loads(moretags.decode('hex'))
-        timestamp = moretags['timestamp']
-        tag = moretags['tag']
-    except:
-        tag = 'im'
-    return {'tag':tag,'message':message,'more':moretags,'timestamp':timestamp}
 def handle(message,sender):
     try:
         coremessage = msgpack.depack(message)
@@ -21,34 +11,38 @@ def handle(message,sender):
         entity_sender = entity.getNicknameByJID(sender)
 
         # put message['message'] to Xi
-        tag = json.dumps({'tag':coremessage['tag'],'timestamp':coremessage['timestamp']}).encode('hex')
+        tag = json.dumps({'xi':is_xi_message,
+                          'tag':coremessage['tag'],
+                          'timestamp':coremessage['timestamp']}).encode('hex')
 
         if xisupport.XI_ENABLED and is_xi_message:
             xisupport.xi_queue(entity_sender,utils.myname,tag,coremessage['message'],False)
             # Retrive Xi handled messages and parse that.
             handled = xisupport.xi_handled(False)
             for i in handled:
-                handle_kernel(i[0],i[1],i[2],i[3],True) # SENDER RECEIVER TAG BODY
+                handle_kernel(i[0],i[1],i[2],i[3]) # SENDER RECEIVER TAG BODY
         else:
-            handle_kernel(entity_sender,utils.myname,tag,coremessage['message'],False)
+            handle_kernel(entity_sender,utils.myname,tag,coremessage['message'])
     except Exception,e:
         print "Error handling message: %s" % e
 
-def handle_kernel(sender,receiver,tag,message,isxi):
+def handle_kernel(sender,receiver,tag,message):
     global BASEPATH
     MSGDB_PATH0 = os.path.join(BASEPATH,'cache','msgdb.')
     try:
-        guidance = parse(message,tag,sender)    # Mix rubbish up. Poor design.
-        tag = guidance['more']
+        tag = json.loads(tag.decode('hex'))
+        reconstructed = {'sender':sender,
+                         'receiver':receiver,
+                         'message':message,
+                         'info':tag}
 
-        if guidance['tag'] != 'im':
+        if reconstructed['info']['tag'] != 'im':
             # Call related programs here !
-            plugins.plugin_do(guidance)
+            plugins.plugin_do(reconstructed)
             return True
-        else:
-            message = guidance['message']
         # Store message
         #notifier.showMessage(message['sender'],message['message'])
+
         while True:
             if os.path.isfile(MSGDB_PATH0 + 'lock'):
                 print 'Orichalcum processor: Message database locked, waiting.'
@@ -57,24 +51,24 @@ def handle_kernel(sender,receiver,tag,message,isxi):
                 dblock = open(MSGDB_PATH0 + 'lock','w+')
                 dblock.close()
                 break
-        
+
         db = shelve.open(MSGDB_PATH0 + 'db' , writeback=True)
-        newpiece = {'message':message,'timestamp':guidance['timestamp'],'xi':isxi}
-        newhash = base64.encodestring(hashlib.md5(message + str(guidance['timestamp'])).digest()).strip()
-        newkey = sender.strip().encode('hex')
+        newhash = hashlib.md5(str(reconstructed['message'])
+                              +str(reconstructed['info']['timestamp'])).hexdigest()
+        newkey = reconstructed['sender'].strip().encode('hex')
 
         do_notify = False
         if db.has_key(newkey) == False:
             do_notify = True
-            db[newkey] = {newhash:newpiece}
+            db[newkey] = {newhash:reconstructed}
         else:
             if not db[newkey].has_key(newhash):
                 do_notify = True
-                db[newkey][newhash] = newpiece
+                db[newkey][newhash] = reconstructed
         db.close()
 
         if do_notify:
-            if isxi:
+            if reconstructed['info']['xi']:
                 notifier.gnotify(u'来自 %s 的机密消息' % sender, '<a href="http://tieba.baidu.com">baidu.com</a>')
             else:
                 notifier.gnotify(u'来自 %s 的普通消息' % sender, '<a href="http://github.com">github.com</a>')
