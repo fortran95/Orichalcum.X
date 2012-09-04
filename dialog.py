@@ -85,7 +85,7 @@ class message_list(object):
                 recid = argv['message'].strip().lower()
                 if recid in self.unhandled_receipts:
                     self.history.paintRecord(recid,self.history['background'])
-                self.unhandled_receipts.remove(recid)
+                    self.unhandled_receipts.remove(recid)
             else:
                 recordid = argv['info']['tag'][3:]
                 if len(recordid) == 32:
