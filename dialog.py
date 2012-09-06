@@ -2,6 +2,8 @@
 from Tkinter import *
 import shelve,os,sys,copy,base64,time,tkMessageBox,threading,tkFileDialog,random,hashlib
 
+from lockfile import FileLock
+
 from widgets.richtextbox import RichTextBox,rich2plain
 from widgets.dialogbox import DialogBox
 import utils
@@ -28,6 +30,15 @@ class message_list(object):
         self.recordfile = os.path.join(BASEPATH,
                                        'cache',
                                        self.buddyname.encode('hex') + '.cache')
+        
+        # Lock Up Record File
+        self.recordLock = FileLock(self.recordfile)
+        try:
+            self.recordLock.acquire(timeout=5)
+        except:
+            self.recordLock.break_lock()
+            raise Exception('Unable to obtain dialog file lock. Is there another dialog already running?')
+
         self.createWidgets()
         self.bindEvents()
         
@@ -126,6 +137,8 @@ class message_list(object):
         global BASEPATH
         # Kill the dialog
         self.root.withdraw()
+        if self.recordLock.i_am_locking():
+            self.recordLock.release()
         self.root.destroy()
     def _send_core(self,data,tag,crypt):
         cache = os.path.join(BASEPATH,
@@ -245,9 +258,15 @@ class message_list(object):
 if len(sys.argv) < 2:
     print 'usage: python dialog.py NAME_OF_YOUR_FRIEND'
     exit()
+
 buddy = sys.argv[1].strip()
 if entity.getJIDsByNickname(buddy) == False:
     print 'Unknown person. Please define persons(entities) in configs/alias.cfg.'
     exit()
 
-frmMessage = message_list(sys.argv[1])
+try:
+    frmMessage = message_list(sys.argv[1])
+except Exception,e:
+    print "Exit with error: %s" % e
+except:
+    print "Exit now."

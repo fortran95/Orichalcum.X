@@ -9,7 +9,7 @@ usercfg.read(os.path.join(BASEPATH,'configs','personal.cfg'))
 
 myname  = usercfg.get('general','username').strip()
 
-SPECIALS = ['message','notification','warning','alarm','emergency']
+SPECIALS = ['message','notification','warning','alarm','emergency']          
 
 def center_window(root):
     w = root.winfo_width()

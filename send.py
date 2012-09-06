@@ -20,6 +20,9 @@ op.add_option("-f","--flush",action="store_true",dest="omit",default=False,help=
 
 myname  = utils.myname
 recname = options.receiver
+if not str(recname).strip():
+    print "Please specify your intended audience by: -r/--receiver NICKNAME"
+    exit()
 if not (options.omit or entity.getJIDsByNickname(recname)):
     print "Unrecognized receiver nickname."
     exit()
