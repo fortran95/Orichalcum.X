@@ -7,7 +7,7 @@ import processor,entity,xmpp,utils
 from Tkinter import *
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
-LOCKPATH = os.path.join(BASEPATH,'daemonized.lock')
+LOCKPATH = os.path.join(BASEPATH,'cache','daemonized.lock')
 
 def restart_program():
     """Restarts the current program.
@@ -193,7 +193,11 @@ class daemon(threading.Thread):
    
 if __name__ == '__main__':
     if os.path.isfile(LOCKPATH):
-        print 'MAKE SURE daemonized.lock HAS BEEN DELETED.'
-        exit()
+        if time.time() - os.path.gmtime(LOCKPATH) > 600:
+            os.remove(LOCKPATH)
+            time.sleep(10)
+        else:
+            print 'MAKE SURE daemonized.lock HAS BEEN DELETED.'
+            exit()
     open(LOCKPATH,'w').write('hello')
     rc = RemoteControl()
