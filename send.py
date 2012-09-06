@@ -20,7 +20,7 @@ op.add_option("-f","--flush",action="store_true",dest="omit",default=False,help=
 
 myname  = utils.myname
 recname = options.receiver
-if not entity.getJIDsByNickname(recname):
+if not (options.omit or entity.getJIDsByNickname(recname)):
     print "Unrecognized receiver nickname."
     exit()
 
