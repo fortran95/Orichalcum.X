@@ -1,4 +1,5 @@
 import os,sys,shelve,ConfigParser
+import logging
 
 MAX_MESSAGE_LENGTH = 1024 # Changing this limit should be cautious
 
@@ -9,7 +10,14 @@ usercfg.read(os.path.join(BASEPATH,'configs','personal.cfg'))
 
 myname  = usercfg.get('general','username').strip()
 
-SPECIALS = ['message','notification','warning','alarm','emergency']          
+SPECIALS = ['message','notification','warning','alarm','emergency']
+
+logging.basicConfig(
+    filename    = os.path.join(BASEPATH,'cache','orichalcumX.log'),
+    level       = logging.DEBUG,
+    format      = '[%(asctime)-19s][%(levelname)-8s] %(name)s (%(filename)s:%(lineno)d)\n  %(message)s\n',
+    datefmt     = '%Y-%m-%d %H:%M:%S'
+)
 
 def center_window(root):
     w = root.winfo_width()

@@ -3,11 +3,17 @@
 # This is used to check and pull messages from given server.
 
 import ConfigParser, sys, os, StringIO, json, shelve, hashlib, hmac, time, tkMessageBox, threading
-import processor,entity,xmpp,utils
+import logging
 from Tkinter import *
+
+import processor
+import entity
+import xmpp
+import utils
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 LOCKPATH = os.path.join(BASEPATH,'cache','daemonized.lock')
+logger = logging.getLogger('orichalcumX.daemon')
 
 def restart_program():
     """Restarts the current program.
@@ -76,9 +82,13 @@ class RemoteControl(object):
         except:
             pass
     def _cmdRestart(self,e=None):
+        logger.debug('Commanded Restart.')
+
         self._cleanUp()
         restart_program()
     def _cmdPowerOff(self,e=None):
+        logger.debug('Commanded PowerOff.')
+
         self._cleanUp()
         sys.exit()
 
@@ -128,15 +138,19 @@ class daemon(threading.Thread):
                                   accountfile.get(secname,'secret')))
     
     def run(self):
-        print "Starting up XMPP clients..."
+        logger.info("Starting up XMPP clients...")
+
         for each in self.clients:
             each[0].start()
-        print "All XMPP Clients fired."
-        print "Feed watchdog."
+        
+        logger.info("All XMPP Clients fired.")
+        logger.info("Feed watchdog.")
         self.feedDog()
 
         # begin looping
         while not self.sig_terminate.isSet():
+            logger.debug("Enter a daemon running loop.")
+
             # Job now.
             now = time.time()
     
@@ -146,6 +160,7 @@ class daemon(threading.Thread):
                 if each[0].isAlive():
                     newmessages += each[0].getMessage()
             if newmessages:
+                logger.info("New message(s) retrived from clients. Will parse them.")
                 for msg in newmessages:
                     processor.handle(msg['message'],utils.stripJID(str(msg['jid'])))
                 newmessages = []
@@ -153,17 +168,21 @@ class daemon(threading.Thread):
             # Job #2: Check if there is anything to send.
             missions = utils.stack_get('outgoing')
             if missions:
+                logger.info("New mission(s) accepted. Distributing them to clients.")
                 for mission in missions:
                     for each in self.clients:
                         if not each[0].isAlive():
                             continue
                         each[1].append(mission)
+            logger.info("Will try sending messages(if any).")
             for each in self.clients:
                 if not each[1]:
                     continue
                 if not each[0].isAlive():
+                    logger.debug("[%s] is not alive. Will omit its job." % each[0].jid)
                     continue
                 if not each[0].connect_status == 2:
+                    logger.debug("[%s] is not connected(Status: %s). Will omit its job." % (each[0].jid, each[0].connect_status))
                     continue
                 if each[0].xmpp.client_roster or True: # XXX This hack enables forcing each account to send.
                     mission = each[1].pop(0)
@@ -174,6 +193,7 @@ class daemon(threading.Thread):
                         if utils.stripJID(jid) == utils.stripJID(each[0].jid):
                             continue
                         if jid in each[0].xmpp.client_roster.keys() or True: # The same with XXX
+                            logger.debug("Set [%s] a new mission." % each[0].jid)
                             each[0].setMessage(jid,mission['message'])     
     
             # Do WatchDog
@@ -181,7 +201,7 @@ class daemon(threading.Thread):
             # Now All Job Done
             time.sleep(0.1)
 
-        print "Exit the program."
+        logger.info("Exit the program.")
         for each in self.clients:
             each[0].terminate()
             each[0].join(10)

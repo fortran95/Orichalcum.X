@@ -1,9 +1,14 @@
 import threading
 import time
 import copy
+import logging
 from Tkinter import *
 
 import sleekxmpp
+
+import utils
+
+logger = logging.getLogger('orichalcumX.xmpp')
 
 class MyClientXMPP(sleekxmpp.ClientXMPP):
     def __init__(self,jid,password):
@@ -36,6 +41,10 @@ class XMPP(threading.Thread):
         self._sig_terminate = threading.Event()
 
         self.xmpp = MyClientXMPP(jid,password)
+        
+        self.xmpp.reconnect_max_attempts = 0
+        self.xmpp.reconnect_delay = 0
+
         self.jid = jid
 
         self.xmpp.add_event_handler("session_start",self._onConnected)
@@ -43,30 +52,41 @@ class XMPP(threading.Thread):
         self.xmpp.add_event_handler("disconnected",self._onDisconnected)
         self.xmpp.add_event_handler("failed_auth",self._onFailedAuth)
         self.xmpp.add_event_handler("socket_error",self._onSocketError)
-        
+        self.xmpp.add_event_handler("connect_failed",self._onConnectFailed)
 
     def run(self):
+        logger.info("XMPP Client [%s] starting..." % self.jid)
+
+        self.xmpp.connect()
+        self.xmpp.process(block=False)
+        self.connect_status = 1
+
         while not self._sig_terminate.isSet():
             nowtime = time.time()
 
             if   self.connect_status == 0:
+                """
+                logger.info('[%s] client now disconnected.' % self.jid)
                 try:
                     self.xmpp.connect()
                     self.xmpp.process(block=False)
                     self.connect_status = 1
                 except Exception,e:
-                    print "XMPP deliver module: failed connecting: %s" % e
+                    logger.error("XMPP deliver module: failed attempt to connect: %s" % e)
                     #self.terminate()
+                """
             elif self.connect_status == 2:
                 # Scheduled to send presence
                 if (nowtime - self.schedule_rec['send_presence'] > 
                         self.schedule_set['send_presence']):
+                    logger.info("Send a presence.")
                     self.xmpp.sendPresence()
                     self.schedule_rec['send_presence'] = nowtime
 
                 # Scheduled to get roster
                 if (nowtime - self.schedule_rec['get_roster'] > 
                         self.schedule_set['get_roster']):
+                    logger.info("Try to get roster.")
                     self.xmpp.getRoster(block=False)
                     self.schedule_rec['get_roster'] = nowtime
 
@@ -85,28 +105,34 @@ class XMPP(threading.Thread):
         # Exiting
         if self.connect_status == 2:
             self.xmpp.disconnect(wait=True)
+        self.xmpp.stop.set()
         return
     def _onSocketError(self,event):
-        print "Socket Error!"
+        logger.warning("Socket Error!")
+
         self.xmpp.disconnect(wait=False)
     def _onFailedAuth(self,event):
-        print "Authentication failed"
+        logger.warning("Authentication failed.")
+
         self.connect_status = -1
         self.terminate()
 
     def _onConnected(self,event):
-        print "Connected"
+        logger.info("Connected.")
+
         self.xmpp.sendPresence()
         if self.connect_status >= 0:
             self.connect_status = 2
 
     def _onDisconnected(self,event):
-        print "Disconnected"
+        logger.info("Disconnected.")
+
         if self.connect_status >= 0:
             self.connect_status = 0
 
     def _onMessage(self,message):
-        print "Got Message"
+        logger.info("Got Message")
+
         self.incoming_lock.acquire()
        
         if message["type"] in ("chat", "normal"):
@@ -114,6 +140,10 @@ class XMPP(threading.Thread):
                                         "message":message["body"]})
 
         self.incoming_lock.release()
+
+    def _onConnectFailed(self,event):
+        logger.info("Connect failed.")
+        self.connect_status = -1
 
     def setMessage(self,jid,message):
         self.outgoing_lock.acquire()
@@ -127,6 +157,7 @@ class XMPP(threading.Thread):
         return ret
 
     def terminate(self):
+        self.xmpp.stop.set()
         self._sig_terminate.set()
 
 if __name__ == '__main__':
