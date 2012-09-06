@@ -193,7 +193,7 @@ class daemon(threading.Thread):
    
 if __name__ == '__main__':
     if os.path.isfile(LOCKPATH):
-        if time.time() - os.path.gmtime(LOCKPATH) > 600:
+        if time.time() - os.path.getmtime(LOCKPATH) > 600:
             os.remove(LOCKPATH)
             time.sleep(10)
         else:
