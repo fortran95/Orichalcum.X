@@ -47,7 +47,7 @@ class RichTextBox(Frame):
     def disable(self):
         self.textbox.config(state=DISABLED)
 
-    def clear(self):
+    def clear(self,e=None):
         self.textbox.config(foreground='#000',background='#FFF')
         self.textbox.delete(1.0,END)
 

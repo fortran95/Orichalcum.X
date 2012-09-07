@@ -153,13 +153,20 @@ class dialog(object):
         
         return recordid
 
-    def quit(self):
+    def quit(self,e=None):
         global BASEPATH
         # Kill the dialog
         self.root.withdraw()
         if self.recordLock.i_am_locking():
             self.recordLock.release()
         self.root.destroy()
+
+    def _onEOF(self,e=None):
+        t = self.replybox.text()
+        if bool(rich2plain(t).strip()):
+            return
+        self.quit()
+
     def _send_core(self,data,tag,crypt):
         cache = os.path.join(BASEPATH,
                              'cache',
@@ -286,6 +293,9 @@ class dialog(object):
 
         self.replybox.bind('<F5>',self._switch_level)
         self.replybox.bind('<Control-Return>',self._onSend)
+        self.replybox.bind('<Control-l>',self.replybox.clear)
+        self.replybox.bind('<Control-d>',self._onEOF)
+        self.replybox.bind('<Control-c>',self.quit)
         self._switch_level()
 
 if len(sys.argv) < 2:

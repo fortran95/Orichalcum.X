@@ -35,10 +35,7 @@ def is_duplicate(h,timeoffset=300):
     h = h.strip().lower()
     sh = shelve.open(dbname,writeback=True)
 
-    delkeys = []
-    for k in sh:
-        if nowtime - sh[k] >= timeoffset:
-            delkeys.append(k)
+    delkeys = [k for k in sh if nowtime-sh[k] >= timeoffset]
     for delkey in delkeys:
         del sh[delkey]
 

@@ -14,7 +14,7 @@ SPECIALS = ['message','notification','warning','alarm','emergency']
 
 logging.basicConfig(
     filename    = os.path.join(BASEPATH,'cache','orichalcumX.log'),
-    level       = logging.DEBUG,
+    level       = logging.WARNING,
     format      = '[%(asctime)-19s][%(levelname)-8s] %(name)s (%(filename)s:%(lineno)d)\n  %(message)s\n',
     datefmt     = '%Y-%m-%d %H:%M:%S'
 )
