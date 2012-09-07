@@ -99,8 +99,10 @@ class message_list(object):
                     self.unhandled_receipts.remove(recid)
             else:
                 recordid = argv['info']['tag'][3:]
-                if len(recordid) == 32:
-                    self._send_core(recordid,'im_receipt',False)   #IM receipt Response.
+                if len(recordid) == 32: # Send response
+                    self._send_core(recordid,
+                                    'im_receipt',
+                                    bool(argv['info']['xi']))
                 self.append_message(isOurs,
                                     message=argv['message'],
                                     timestamp=argv['info']['timestamp'],
@@ -173,10 +175,12 @@ class message_list(object):
                                        message=message,
                                        timestamp=time.time()
                                       ).strip().lower()
-        self._send_core(message,'im_%s' % recordid,crypt)
         if self.needReceipt.get():
             self.unhandled_receipts.append(recordid)
             self.history.paintRecord(recordid,self.UNHANDLED_RECEIPT_COLOR)
+        else:
+            recordid = 'x'
+        self._send_core(message,'im_%s' % recordid,crypt)
 
         # clear input box
         self.replybox.clear()
