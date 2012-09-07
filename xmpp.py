@@ -57,15 +57,16 @@ class XMPP(threading.Thread):
     def run(self):
         logger.info("XMPP Client [%s] starting..." % self.jid)
 
+        """
         self.xmpp.connect()
         self.xmpp.process(block=False)
         self.connect_status = 1
+        """
 
         while not self._sig_terminate.isSet():
             nowtime = time.time()
 
             if   self.connect_status == 0:
-                """
                 logger.info('[%s] client now disconnected.' % self.jid)
                 try:
                     self.xmpp.connect()
@@ -74,7 +75,6 @@ class XMPP(threading.Thread):
                 except Exception,e:
                     logger.error("XMPP deliver module: failed attempt to connect: %s" % e)
                     #self.terminate()
-                """
             elif self.connect_status == 2:
                 # Scheduled to send presence
                 if (nowtime - self.schedule_rec['send_presence'] > 
