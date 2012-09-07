@@ -295,7 +295,6 @@ class dialog(object):
         self.replybox.bind('<Control-Return>',self._onSend)
         self.replybox.bind('<Control-l>',self.replybox.clear)
         self.replybox.bind('<Control-d>',self._onEOF)
-        self.replybox.bind('<Control-c>',self.quit)
         self._switch_level()
 
 if len(sys.argv) < 2:
