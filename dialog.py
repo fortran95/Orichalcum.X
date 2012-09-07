@@ -24,13 +24,21 @@ BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 logger = logging.getLogger('orichalcumX.dialog')
 
 FONT = ('sans',11)
-class message_list(object):
+class dialog(object):
 
     message_queue = []
     filter_hashes = []
     unhandled_receipts = []
 
     UNHANDLED_RECEIPT_COLOR = '#FCC'
+
+    SECURITY_CONFIGS = [(('随便的谈话','#A00','#FFF'),(False,False,False)),
+                        (('关注的谈话','#FC0','#000'),(True,False,False)),
+                        (('重要的对话','#00A','#FFF'),(True,True,True)),
+                        (('机密的对话','#A0A','#FFF'),(True,True,True)),]
+    security_choice = 0
+
+    one_more_return = False
 
     def __init__(self,buddyname):
         global BASEPATH
@@ -51,7 +59,6 @@ class message_list(object):
             raise Exception('Unable to obtain dialog file lock. Is there another dialog already running?')
 
         self.createWidgets()
-        self.bindEvents()
         
         # Center the Window and set it un-resizable.
         utils.center_window(self.root)
@@ -175,8 +182,9 @@ class message_list(object):
             print e
         os.remove(cache)
         
-    def _do_send(self,message,crypt=True):
+    def _do_send(self,crypt=True,receipt=False):
         global BASEPATH
+        message = self.replybox.text()
 
         msglen = len(rich2plain(message).strip())
         if msglen <= 0 or msglen > utils.MAX_MESSAGE_LENGTH:
@@ -188,7 +196,7 @@ class message_list(object):
                                        message=message,
                                        timestamp=time.time()
                                       ).strip().lower()
-        if self.needReceipt.get():
+        if receipt:
             self.unhandled_receipts.append(recordid)
             self.history.paintRecord(recordid,self.UNHANDLED_RECEIPT_COLOR)
         else:
@@ -198,12 +206,34 @@ class message_list(object):
         # clear input box
         self.replybox.clear()
 
-    def send_plain(self,events=None):
-        self._do_send(self.replybox.text(),False)
-        return
+    def _switch_level(self,events=None):
+        if self.security_choice >= len(self.SECURITY_CONFIGS):
+            self.security_choice = 0
+        profile = self.SECURITY_CONFIGS[self.security_choice]
+        self.btnSecureLevel.config(text=profile[0][0],
+                                   background=profile[0][1],
+                                   foreground=profile[0][2])
 
-    def send_crypt(self,events=None):
-        self._do_send(self.replybox.text(),True)
+        def cfg(obj,txt,status):
+            if status:
+                obj.config(text=txt[1],background='#0A0',foreground='#FFF')
+            else:
+                obj.config(text=txt[0],background='#A00',foreground='#FFF')
+
+        cfg(self.showReceipt,('无回执','发送回执请求'),profile[1][0])
+        cfg(self.showDefault,('明文发送','密文发送'),profile[1][1])
+        cfg(self.showShortcut,('<Ctrl+Enter>','<Ctrl+Enter> X 2'),profile[1][2])
+       
+        self.security_choice += 1
+
+    def _onSend(self,e=None):
+        p = self.SECURITY_CONFIGS[self.security_choice]
+        if p[1][2] and self.one_more_return == False:
+            self.one_more_return = True
+            return
+
+        self.one_more_return = False
+        self._do_send(bool(p[1][1]),bool(p[1][0]))
 
     def createWidgets(self):      
         # Create Message Box
@@ -221,57 +251,39 @@ class message_list(object):
         self.replybox = RichTextBox(self.root,width=80,height=8)
         self.replybox.grid(row=1,column=0,sticky=N+S+W+E)
 
-        self.buttonframe = Frame(self.root,background='Red')
+        self.buttonframe = Frame(self.root,background='Black')
         self.buttonframe.grid(row=1,column=1,sticky=N+S+W+E,padx=2,pady=2)
 
-        self.needReceipt = IntVar()
-        self.needReceiptCheckbox = Checkbutton(self.buttonframe,
-                                               padx=15,
-                                               pady=10,
-                                               width=15,
-                                               highlightthickness=2,
-                                               variable=self.needReceipt,
-                                               indicatoron=False,
-                                               font=FONT)
-        self._normal_highlightcolor = self.needReceiptCheckbox['highlightbackground']
-        def _onReceiptboxChecked(v1=None,mode=None,events=None):
-            if self.needReceipt.get():
-                self.needReceiptCheckbox.config(text='当前设定：请求回执',
-                                                highlightbackground='#F00')
-            else:
-                self.needReceiptCheckbox.config(text='当前设定：不需回执',
-                                                highlightbackground=self._normal_highlightcolor)
-        self.needReceiptCheckbox.pack(side=TOP,fill=BOTH,expand=True)
-        self.needReceipt.trace_variable('w',_onReceiptboxChecked)
-        self.needReceipt.set(0)
+        self.btnSecureLevel = Button(self.buttonframe,
+                                     font=FONT,
+                                     text='Secure: LOW',
+                                     width=20,
+                                     command=self._switch_level)
+        showProperties = {'font':FONT,
+                          'relief':RIDGE,
+                         }
+        self.showReceipt = Label(self.buttonframe,
+                                 text='Receipt Required',
+                                 **showProperties)
+        self.showDefault = Label(self.buttonframe,
+                                 text='Plain',
+                                 **showProperties)
+        self.showShortcut = Label(self.buttonframe,
+                                  text='Ctrl+Enter',
+                                  **showProperties)
 
-        self.plainsend = Button(self.buttonframe,
-                                text=u'明文发送\nCtrl+Shift+Enter',
-                                padx=15,
-                                pady=10,
-                                highlightthickness=2,
-                                font=FONT)
-        self.plainsend.pack(side=TOP,fill=BOTH,expand=True)
-        self.plainsend['command'] = self.send_plain
+        packProperties = {'padx':5,'pady':5,'ipadx':5,'ipady':5,'fill':BOTH,'expand':True}
+        self.btnSecureLevel.pack(side=TOP,**packProperties)
+        self.showReceipt.pack(side=TOP,**packProperties)
+        self.showDefault.pack(side=TOP,**packProperties)
+        self.showShortcut.pack(side=TOP,**packProperties)
 
-        self.cryptsend = Button(self.buttonframe,
-                                text=u'加密发送\nCtrl+Enter',
-                                padx=15,
-                                pady=10,
-                                highlightthickness=2,
-                                bg='#FFC800',
-                                font=FONT)
-        self.cryptsend.pack(side=TOP,fill=BOTH,expand=True)
-        self.cryptsend['command'] = self.send_crypt
-        if not xisupport.XI_ENABLED:
-            self.cryptsend['state'] = DISABLED
-        
         # Update the window.
         self.root.update_idletasks()
 
-    def bindEvents(self):
-        self.replybox.bind('<Control-Return>',self.send_crypt)
-        self.replybox.bind('<Control-Shift-Return>',self.send_plain)
+        self.replybox.bind('<F5>',self._switch_level)
+        self.replybox.bind('<Control-Return>',self._onSend)
+        self._switch_level()
 
 if len(sys.argv) < 2:
     print 'usage: python dialog.py NAME_OF_YOUR_FRIEND'
@@ -283,7 +295,7 @@ if entity.getJIDsByNickname(buddy) == False:
     exit()
 
 try:
-    frmMessage = message_list(sys.argv[1])
+    frmMessage = dialog(sys.argv[1])
 except Exception,e:
     print "Exit with error: %s" % e
 except:
