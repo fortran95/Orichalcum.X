@@ -32,11 +32,11 @@ class dialog(object):
 
     UNHANDLED_RECEIPT_COLOR = '#FCC'
 
-    SECURITY_CONFIGS = [(('随便的谈话','#A00','#FFF'),(False,False,False)),
-                        (('关注的谈话','#FC0','#000'),(True,False,False)),
-                        (('重要的对话','#00A','#FFF'),(True,True,True)),
-                        (('机密的对话','#A0A','#FFF'),(True,True,True)),]
-    security_choice = 0
+    SECURITY_CONFIGS = [(('随便的谈话','#FF2400','#FFF'),(False,False,False)),
+                        (('关注的谈话','#FF8C00','#000'),(True,False,False)),
+                        (('重要的对话','#0070FF','#FFF'),(True,True,False)),
+                        (('机密的对话','#4B0082','#FFF'),(True,True,True)),]
+    security_choice = -1
 
     one_more_return = False
 
@@ -207,6 +207,7 @@ class dialog(object):
         self.replybox.clear()
 
     def _switch_level(self,events=None):
+        self.security_choice += 1
         if self.security_choice >= len(self.SECURITY_CONFIGS):
             self.security_choice = 0
         profile = self.SECURITY_CONFIGS[self.security_choice]
@@ -223,16 +224,18 @@ class dialog(object):
         cfg(self.showReceipt,('无回执','发送回执请求'),profile[1][0])
         cfg(self.showDefault,('明文发送','密文发送'),profile[1][1])
         cfg(self.showShortcut,('<Ctrl+Enter>','<Ctrl+Enter> X 2'),profile[1][2])
-       
-        self.security_choice += 1
+    def __resumeShortcutDisplay(self,e=None):
+        self.showShortcut.config(font=FONT)
+        self.one_more_return=False
 
     def _onSend(self,e=None):
         p = self.SECURITY_CONFIGS[self.security_choice]
         if p[1][2] and self.one_more_return == False:
             self.one_more_return = True
+            self.showShortcut.config(font=FONT+('bold',))
+            self.root.after(500,self.__resumeShortcutDisplay)
             return
-
-        self.one_more_return = False
+        self.__resumeShortcutDisplay()
         self._do_send(bool(p[1][1]),bool(p[1][0]))
 
     def createWidgets(self):      
