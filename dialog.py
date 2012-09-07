@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 from Tkinter import *
-import shelve,os,sys,copy,base64,time,tkMessageBox,threading,tkFileDialog,random,hashlib
+import shelve
+import os
+import sys
+import copy
+import time
+import tkMessageBox
+import tkFileDialog
+import threading
+import random
+import hashlib
+import logging
 
 from lockfile import FileLock
 
@@ -11,6 +21,7 @@ import xisupport
 import entity
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
+logger = logging.getLogger('orichalcumX.dialog')
 
 FONT = ('sans',11)
 class message_list(object):
@@ -34,7 +45,7 @@ class message_list(object):
         # Lock Up Record File
         self.recordLock = FileLock(self.recordfile)
         try:
-            self.recordLock.acquire(timeout=5)
+            self.recordLock.acquire(timeout=2)
         except:
             self.recordLock.break_lock()
             raise Exception('Unable to obtain dialog file lock. Is there another dialog already running?')
@@ -151,13 +162,15 @@ class message_list(object):
                             )
         open(cache,'w').write(data)
         try:
-            cmd = "python %s -r %s -i %s -t %s" % (os.path.join(BASEPATH,'send.py'),
+            cmd1 = "python %s -r %s -i %s -t %s" % (os.path.join(BASEPATH,'send.py'),
                                                    self.buddyname,
                                                    cache,
                                                    tag)
+            cmd2 = "python %s -f" % os.path.join(BASEPATH,'send.py')
             if crypt:
-                cmd += ' -x'
-            os.system(cmd)
+                cmd1 += ' -x'
+            os.system(cmd1)
+            os.system(cmd2)
         except Exception,e:
             print e
         os.remove(cache)
@@ -197,7 +210,7 @@ class message_list(object):
         self.historyBox = Frame(self.root)
         self.historyBox.grid(row=0,column=0,columnspan=2,sticky=N+S+W+E)
 
-        self.history = DialogBox(self.historyBox)
+        self.history = DialogBox(self.historyBox,height=20)
 
         self.historyScroll = Scrollbar(self.historyBox,command=self.history.yview,width=16)
         self.history.config(yscrollcommand=self.historyScroll.set)
@@ -205,7 +218,7 @@ class message_list(object):
         self.historyScroll.pack(side=RIGHT,fill=Y)
         self.history.pack(side=RIGHT,fill=BOTH,expand=True)
 
-        self.replybox = RichTextBox(self.root,width=80,height=6)
+        self.replybox = RichTextBox(self.root,width=80,height=8)
         self.replybox.grid(row=1,column=0,sticky=N+S+W+E)
 
         self.buttonframe = Frame(self.root,background='Red')
@@ -233,7 +246,7 @@ class message_list(object):
         self.needReceipt.set(0)
 
         self.plainsend = Button(self.buttonframe,
-                                text=u'明文发送',
+                                text=u'明文发送\nCtrl+Shift+Enter',
                                 padx=15,
                                 pady=10,
                                 highlightthickness=2,
@@ -242,7 +255,7 @@ class message_list(object):
         self.plainsend['command'] = self.send_plain
 
         self.cryptsend = Button(self.buttonframe,
-                                text=u'加密发送',
+                                text=u'加密发送\nCtrl+Enter',
                                 padx=15,
                                 pady=10,
                                 highlightthickness=2,
@@ -257,7 +270,8 @@ class message_list(object):
         self.root.update_idletasks()
 
     def bindEvents(self):
-        self.replybox.bind('<Control-Return>',self.send_plain)
+        self.replybox.bind('<Control-Return>',self.send_crypt)
+        self.replybox.bind('<Control-Shift-Return>',self.send_plain)
 
 if len(sys.argv) < 2:
     print 'usage: python dialog.py NAME_OF_YOUR_FRIEND'
