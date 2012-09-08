@@ -8,6 +8,7 @@ BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 
 def handle(message,sender):
     try:
+#        print message,sender
         coremessage = msgpack.depack(message)
         is_xi_message = coremessage['xi']
         entity_sender = entity.getNicknameByJID(sender)

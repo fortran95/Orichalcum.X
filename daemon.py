@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 # This is used to check and pull messages from given server.
@@ -162,6 +163,7 @@ class daemon(threading.Thread):
             if newmessages:
                 logger.info("New message(s) retrived from clients. Will parse them.")
                 for msg in newmessages:
+#                    print msg
                     processor.handle(msg['message'],utils.stripJID(str(msg['jid'])))
                 newmessages = []
 
