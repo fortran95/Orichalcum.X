@@ -1,7 +1,7 @@
 import os,sys,shelve,ConfigParser
 import logging
 
-MAX_MESSAGE_LENGTH = 1024 # Changing this limit should be cautious
+MAX_MESSAGE_LENGTH = 10240 # Changing this limit should be cautious
 
 BASEPATH = os.path.realpath(os.path.dirname(sys.argv[0]))
 

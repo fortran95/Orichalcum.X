@@ -68,6 +68,16 @@ class dialog(object):
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
         self.root.after(0,self.readMessages)
         self.root.mainloop()
+
+    def ding(self):
+        global BASEPATH
+        path = os.path.join(BASEPATH,'alarms','notify.mp3')
+        if os.isfile(path):
+            try:
+                os.system("mpg123 %s" % path)
+            except:
+                pass
+
     def readMessages(self):
         global BASEPATH
 
@@ -126,6 +136,7 @@ class dialog(object):
                                     message=argv['message'],
                                     timestamp=argv['info']['timestamp'],
                                     xi=argv['info']['xi'])
+                self.ding()
         except Exception,e:
             if not isOurs:
                 self.history.newRecord(':: 收到一条错误消息 :: 长度%d字节 (%s)'
