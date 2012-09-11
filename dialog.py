@@ -74,7 +74,7 @@ class dialog(object):
         path = os.path.join(BASEPATH,'alarms','notify.mp3')
         if os.path.isfile(path):
             try:
-                os.system("mpg123 %s" % path)
+                os.system("mpg123 %s &" % path)
             except:
                 pass
 
