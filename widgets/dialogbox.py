@@ -15,6 +15,11 @@ class DialogBox(Text):
     tagconfigs = _utils.TAGCONFIGS
     font = _utils.FONT
 
+    def clear(self):
+        self.config(state=NORMAL)
+        self.delete(1.0,END)
+        self.config(state=DISABLED)
+
     def __init__(self,master,**options):
         Text.__init__(self,master,**options)
         self.config(padx=7,pady=5,font=self.font)

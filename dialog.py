@@ -258,12 +258,46 @@ class dialog(object):
         self.__resumeShortcutDisplay()
         self._do_send(bool(p[1][1]),bool(p[1][0]))
 
+    def _onMenuClear(self,w):
+        if w == self.history:
+            self.history.clear()
+        if w == self.replybox.textbox:
+            self.replybox.clear()
+
+    def _onMenu(self,e):
+        w = e.widget
+        self.quickmenu.entryconfigure("剪切",
+                                      command=lambda: w.event_generate("<<Cut>>"))
+        self.quickmenu.entryconfigure("复制",
+                                      command=lambda: w.event_generate("<<Copy>>"))
+        self.quickmenu.entryconfigure("粘贴",
+                                       command=lambda: w.event_generate("<<Paste>>"))
+        self.quickmenu.entryconfigure("清空",
+                                       command=lambda: self._onMenuClear(w))
+        self.quickmenu.tk.call("tk_popup",
+                               self.quickmenu,
+                               e.x_root,
+                               e.y_root)
+
+    def _createMenu(self):
+        self.quickmenu = Menu(self.root, tearoff=0, font=FONT)
+        self.quickmenu.add_command(label="剪切")
+        self.quickmenu.add_command(label="复制")
+        self.quickmenu.add_separator()
+        self.quickmenu.add_command(label="粘贴")
+        self.quickmenu.add_separator()
+        self.quickmenu.add_command(label="清空")
+
     def createWidgets(self):      
         # Create Message Box
+        self._createMenu()
+
         self.historyBox = Frame(self.root)
         self.historyBox.grid(row=0,column=0,columnspan=2,sticky=N+S+W+E)
 
         self.history = DialogBox(self.historyBox,height=20)
+        self.historyBox.bind_class("Text","<Button-3><ButtonRelease-3>",
+                                   self._onMenu)
 
         self.historyScroll = Scrollbar(self.historyBox,command=self.history.yview,width=16)
         self.history.config(yscrollcommand=self.historyScroll.set)
@@ -272,6 +306,8 @@ class dialog(object):
         self.history.pack(side=RIGHT,fill=BOTH,expand=True)
 
         self.replybox = RichTextBox(self.root,width=80,height=8)
+        self.replybox.textbox.bind_class("Text","<Button-3><ButtonRelease-3>",
+                                         self._onMenu)
         self.replybox.grid(row=1,column=0,sticky=N+S+W+E)
 
         self.buttonframe = Frame(self.root,background='Black')
