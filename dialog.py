@@ -71,6 +71,7 @@ class dialog(object):
 
     def ding(self):
         global BASEPATH
+        return
         path = os.path.join(BASEPATH,'alarms','notify.mp3')
         if os.path.isfile(path):
             try:
