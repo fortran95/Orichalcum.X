@@ -32,7 +32,7 @@ def gnotify(message,desc):
     pynotify.init("Orichalcum")
     n = pynotify.Notification(message,desc)
     n.set_urgency(pynotify.URGENCY_NORMAL)
-    n.set_timeout(15)
+    n.set_timeout(15000)
     n.show()
     time.sleep(1)
     

@@ -70,6 +70,13 @@ def handle_kernel(sender,receiver,tag,message):
             # Call related programs here !
             plugins.plugin_do(reconstructed)
             return True
+        else:
+            if reconstructed['info']['tag'] not in ('im_receipt',):
+                quickview = rich2plain(reconstructed['message'])
+                if reconstructed['info']['xi']:
+                    notifier.gnotify(u'来自 %s 的机密消息' % sender, quickview)
+                else:
+                    notifier.gnotify(u'来自 %s 的普通消息' % sender, quickview)
 
         # Store message for dialogs
         while True:
@@ -92,12 +99,6 @@ def handle_kernel(sender,receiver,tag,message):
 
         db.close()
 
-        if reconstructed['info']['tag'] == 'im':
-            quickview = rich2plain(reconstructed['message'])
-            if reconstructed['info']['xi']:
-                notifier.gnotify(u'来自 %s 的机密消息' % sender, quickview)
-            else:
-                notifier.gnotify(u'来自 %s 的普通消息' % sender, quickview)
     except Exception,e:
         print "Error saving message: %s" % e
     # Remove database lock
